@@ -32,7 +32,7 @@ class Geneve:
     """
 
     def __init__(self, rawpacket, start_padding=0, parse_options=True):
-        unpacked_struct = unpack('!BBH3sB', rawpacket.raw_data[start_padding:])
+        unpacked_struct = unpack('!BBH3sB', rawpacket.raw_data[start_padding:start_padding + 8])
 
         self.version = unpacked_struct[0] >> 6
         # The option length fields represent the options size in words count (multiple of 4 bytes)
