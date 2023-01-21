@@ -122,7 +122,7 @@ class GeneveOption:
         self.option_length = unpacked_struct[2] & 0x1F
         self.total_length = self.option_length * 4 + 4
 
-        self.option_raw = rawpacket.raw_data[start_padding + 4:start_padding + self.option_length * 4]
+        self.option_raw = rawpacket.raw_data[start_padding + 4:start_padding + 4 + self.option_length * 4]
 
     def repack(self):
         """
