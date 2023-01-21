@@ -1,4 +1,4 @@
-from headers import ipv4, tcp, udp, geneve
+from headers import ipv4, icmp, tcp, udp, geneve
 import config
 
 
@@ -24,6 +24,11 @@ class RawPacket:
         elif self.inner_ipv4.protocol == 6:
             self.inner_tcp = tcp.TCP(self, self.outter_ipv4.header_length_bytes + 8 + self.geneve.header_length_bytes + self.inner_ipv4.header_length_bytes)
             logger.debug(f"GENEVE - Inner packet info : TCP src_port : {self.inner_tcp.src_port} / dst_port : {self.inner_tcp.dst_port} / flags : {self.inner_tcp.tcp_flags_str}")
+        elif self.inner_ipv4.protocol == 1:
+            self.inner_icmp = icmp.ICMP(self, self.outter_ipv4.header_length_bytes + 8 + self.geneve.header_length_bytes + self.inner_ipv4.header_length_bytes)
+            logger.debug(f"GENEVE - Inner packet info : ICMP type : {self.inner_icmp.type} / code : {self.inner_icmp.code}")
+        else:
+            logger.debug(f"GENEVE - Unknown inner packet type")
 
         self.outter_ipv4.swap_addresses()
         self.outter_ipv4.ttl -= 1
