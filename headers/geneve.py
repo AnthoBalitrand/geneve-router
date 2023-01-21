@@ -83,7 +83,7 @@ class Geneve:
 
     @property
     def flow_cookie(self):
-        return self.get_tunnel_option(option_class=0x0108, option_type=3).option_raw
+        return self.get_tunnel_option(option_class=0x0108, option_type=3).option_raw.hex()
 
 
 class GeneveOption:
