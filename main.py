@@ -115,6 +115,7 @@ def geneve_handler(geneve_packet):
     try:
         rec_packet = RawPacket(logger, geneve_packet)
     except UnmatchedGenevePort:
+        logger.debug("Ignoring UDP packet receive on non-Geneve port")
         return None
     return None
 

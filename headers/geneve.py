@@ -47,6 +47,8 @@ class Geneve:
         self.parsed_options = list()
         self.raw_options = None
 
+        self.header_length_bytes = 8 + self.options_length * 4
+
         if self.options_length and parse_options:
             parsed_options_length = 0
             while parsed_options_length < self.options_length * 4:
