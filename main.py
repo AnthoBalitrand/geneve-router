@@ -64,7 +64,7 @@ def main():
                     data, addr = s_sock.recvfrom(65565)
                     logger.debug(f"GENEVE - Received packet from {addr[0]}")
                     if (geneve_response_packet := geneve_handler(data)):
-                        s_sock.send(geneve_response_packet)
+                        s_sock.sendto(geneve_response_packet, addr)
                         logger.debug(f"GENEVE - Packet forwarded")
                 if s_sock == health_socket:
                     c_sock, c_addr = s_sock.accept()
