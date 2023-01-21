@@ -69,3 +69,14 @@ class TCP:
 
         if self.data_offset > 5:
             self.options_raw = rawpacket.raw_data[start_padding + 20:start_padding + 20 + (self.data_offset - 5) * 4]
+
+    @property
+    def tcp_flags_str(self):
+        flags = ""
+        flags += "S" if self.syn else ""
+        flags += "A" if self.ack else ""
+        flags += "R" if self.rst else ""
+        flags += "F" if self.fin else ""
+        flags += "U" if self.urg else ""
+        flags += "P" if self.psh else ""
+        return flags
