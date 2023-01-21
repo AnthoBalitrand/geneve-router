@@ -1,5 +1,6 @@
 from struct import unpack, pack_into
 
+
 class IPv4:
     """
     IPv4 header representation
@@ -86,7 +87,7 @@ class IPv4:
         """
         self.src_addr, self.dst_addr = self.dst_addr, self.src_addr
 
-    def repack(self):
+    def repack(self, null_checksum=False):
         """
         Rebuilds a byte-encoded IP header
         :return: (bytearray) Byte-encoded packed IP header
@@ -104,7 +105,7 @@ class IPv4:
                   (self.x_flag << 15) + (self.dnf << 14) + (self.more_fragments << 13) + self.fragment_offset,
                   self.ttl,
                   self.protocol,
-                  self.checksum,
+                  0 if null_checksum else self.checksum,
                   self.src_addr,
                   self.dst_addr)
 
@@ -137,3 +138,20 @@ class IPv4:
         :return: (str) String representation of the current IPv4 object instance
         """
         return f"IPv4 header. Version {self.version}. Source IP {self.src_addr_str}. Destination IP {self.dst_addr_str}"
+
+    def update_checksum(self):
+        self.checksum = IPv4.calculate_checksum_for_bytes(self.repack())
+
+    @classmethod
+    def calculate_checksum_for_bytes(cls, header_bytes: bytes) -> int:
+        """Calculate the checksum for the provided header."""
+
+        def carry_around_add(a, b):
+            c = a + b
+            return (c & 0xffff) + (c >> 16)
+
+        s = 0
+        for i in range(0, len(header_bytes), 2):
+            w = header_bytes[i + 1] + (header_bytes[i] << 8)
+            s = carry_around_add(s, w)
+        return ~s & 0xffff

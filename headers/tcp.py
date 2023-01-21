@@ -1,5 +1,6 @@
 from struct import unpack, pack_into
 
+
 class TCP:
     """
     TCP header representation

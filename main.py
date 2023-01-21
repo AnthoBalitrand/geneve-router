@@ -13,6 +13,7 @@ LOG_LEVELS = {
     "critical": logging.CRITICAL,
 }
 
+
 class bcolors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -25,6 +26,7 @@ class bcolors:
     UNDERLINE = '\033[4m'
 
 logger = None
+
 
 def main():
     print("Starting and initializing logger...")
@@ -63,6 +65,7 @@ def main():
                     logger.debug(f"GENEVE - Received packet from {addr[0]}")
                     if (geneve_response_packet := geneve_handler(data)):
                         s_sock.send(geneve_response_packet)
+                        logger.debug(f"GENEVE - Packet forwarded")
                 if s_sock == health_socket:
                     c_sock, c_addr = s_sock.accept()
                     c_sock.settimeout(1.0)
@@ -86,6 +89,7 @@ def main():
 
     return 0
 
+
 def configure_logging(level, loggername, logfile="logging.log", on_screen=True):
     logger = logging.getLogger(loggername)
     logger.setLevel(LOG_LEVELS.get(level, LOG_LEVELS["debug"]))
@@ -104,11 +108,13 @@ def configure_logging(level, loggername, logfile="logging.log", on_screen=True):
         logger.addHandler(sh)
     return logger
 
+
 def http_healthcheck_response():
     body = "Healthy\n"
 
     header = f"HTTP/1.1 200 OK\nContent-Type: text/html; charset=utf-8\nContent-Length: {len(body)}\nConnection: close"
     return header + '\n\n' + body
+
 
 def geneve_handler(geneve_packet):
     global logger
@@ -117,7 +123,8 @@ def geneve_handler(geneve_packet):
     except UnmatchedGenevePort:
         logger.debug("Ignoring UDP packet receive on non-Geneve port")
         return None
-    return None
+    return rec_packet.resp
+
 
 if __name__ == "__main__":
     main()

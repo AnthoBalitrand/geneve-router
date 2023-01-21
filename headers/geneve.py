@@ -72,8 +72,19 @@ class Geneve:
                   self.protocol,
                   self.vni, 0)
 
-        for opt in self.options:
+        for opt in self.parsed_options:
             repacked_bytes.extend(opt.repack())
+
+    def get_tunnel_option(self, option_class, option_type):
+        for opt in self.parsed_options:
+            if opt.option_class == option_class and opt.option_type == option_type:
+                return opt
+        return None
+
+    @property
+    def flow_cookie(self):
+        return self.get_tunnel_option(option_class=0x0108, option_type=3)
+
 
 class GeneveOption:
     """
