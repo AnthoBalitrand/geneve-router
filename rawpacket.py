@@ -32,7 +32,8 @@ class RawPacket:
 
         self.outter_ipv4.swap_addresses()
         self.outter_ipv4.ttl -= 1
-        self.outter_ipv4.update_checksum()
+        # Disabled update_checksum to check if NIC offload does it by itself
+        # self.outter_ipv4.update_checksum()
 
     @property
     def resp(self):

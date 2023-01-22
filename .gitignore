@@ -1,3 +1,7 @@
 socket_programming_examples
 .idea
 __pycache__
+terraform-files/.terraform
+terraform-files/.terraform*
+terraform-files/*.tfstate*
+terraform-files/*.pem
