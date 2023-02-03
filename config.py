@@ -1,3 +1,4 @@
 GENEVE_PORT = 6081
 HEALTH_CHECK_PORT = 80
 LOG_LEVEL = "debug"
+LOG_FILE = "logging.log"

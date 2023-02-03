@@ -1,9 +1,19 @@
 import select, socket
 import sys
+import os
 import logging, logging.handlers
+import daemon
+import lockfile
 import signal
 from rawpacket import RawPacket, UnmatchedGenevePort
 import config
+import argparse
+try:
+    import procname
+    imp_procname = True
+except ImportError:
+    imp_procname = False
+
 
 LOG_LEVELS = {
     "debug": logging.DEBUG,
@@ -15,12 +25,48 @@ LOG_LEVELS = {
 
 logger = None
 
-
-def main():
-    print("Starting and initializing logger...")
+def shutdown(signum, sigframe):
     global logger
-    logger = configure_logging(config.LOG_LEVEL, "geneve-router")
+    logger.info(f"Received signal {signum}")
+    sys.exit(0)
 
+def cli_parser():
+    parser = argparse.ArgumentParser(
+        prog="geneve-router",
+        description="Geneve router for AWS GWLB",
+        epilog="by Antho Balitrand"
+    )
+
+    parser.add_argument(
+        "--no-daemon",
+        action="store_true",
+        help="Do not start the Geneve router as a daemon",
+    )
+
+    parser.add_argument(
+        "-l", "--log-level",
+        action="store",
+        help=f"Log level. If used without --no-daemon, will force logging to {config.LOG_FILE}",
+        default="default"
+    )
+
+    parser.add_argument(
+        "-f", "--log-file",
+        action="store",
+        help="Logging file. Overwrites the config.LOG_FILE parameter",
+        default=config.LOG_FILE
+    )
+
+    return parser.parse_args()
+
+
+def check_permission():
+    if not os.environ.get("SUDO_UID") and os.geteuid() != 0:
+        sys.exit('Please start with root permissions')
+
+
+def start():
+    global logger
     logger.info("Logging initialized. Building sockets...")
 
     # the health_socket is the one used for the GWLB health-check requests
@@ -67,7 +113,7 @@ def main():
                         c_sock.close()
                 if s_sock == bind_socket:
                     data, addr = s_sock.recvfrom(65565)
-                    #print(f"BIND SOCK - received from {addr} : {data.decode('utf-8')}")
+                    # print(f"BIND SOCK - received from {addr} : {data.decode('utf-8')}")
         except KeyboardInterrupt:
             logger.warning("User-interrupt received. Closing sockets...")
             health_socket.close()
@@ -75,26 +121,55 @@ def main():
             bind_socket.close()
             break
 
+def main():
+    start_cli_args = cli_parser()
+    check_permission()
+
+    print("Starting and initializing logger...")
+    global logger
+    logger, h = configure_logging(
+        config.LOG_LEVEL if start_cli_args.log_level == "default" else start_cli_args.log_level,
+        "geneve-router",
+        logfile=start_cli_args.log_file,
+        on_screen=start_cli_args.no_daemon,
+        force_logging=True if start_cli_args.log_level != "default" else False
+    )
+
+    if start_cli_args.no_daemon:
+        start()
+    else:
+        with daemon.DaemonContext(
+            pidfile=lockfile.FileLock('/var/run/geneve-router.pid'),
+            signal_map={
+                signal.SIGTERM: shutdown,
+                signal.SIGTSTP: shutdown
+            },
+            working_directory=os.getcwd(),
+            files_preserve=[h.stream]
+        ):
+            start()
+
     return 0
 
 
-def configure_logging(level, loggername, logfile="logging.log", on_screen=True):
+def configure_logging(level, loggername, logfile, on_screen=True, force_logging=False):
+    global logger
     logger = logging.getLogger(loggername)
     logger.setLevel(LOG_LEVELS.get(level, LOG_LEVELS["debug"]))
     formatter = logging.Formatter(
         "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     )
 
-    if not on_screen:
-        fh = logging.handlers.WatchedFileHandler(logfile)
-        fh.setLevel(LOG_LEVELS.get(level, LOG_LEVELS["debug"]))
-        fh.setFormatter(formatter)
-        logger.addHandler(fh)
-    else:
-        sh = logging.StreamHandler(stream=sys.stdout)
-        sh.setFormatter(formatter)
-        logger.addHandler(sh)
-    return logger
+    if not on_screen and force_logging:
+        h = logging.handlers.WatchedFileHandler(logfile)
+        h.setLevel(LOG_LEVELS.get(level, LOG_LEVELS["debug"]))
+        h.setFormatter(formatter)
+        logger.addHandler(h)
+    elif on_screen:
+        h = logging.StreamHandler(stream=sys.stdout)
+        h.setFormatter(formatter)
+        logger.addHandler(h)
+    return logger, h
 
 
 def http_healthcheck_response():
