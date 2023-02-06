@@ -20,7 +20,7 @@ class UDP:
     Checksum:       Calculated from part of the IP header, UDP header + payload to ensure integrity
     """
 
-    def __init__(self, rawpacket, start_padding=0):
+    def __init__(self, rawpacket, start_padding=0, ip_payload_length=0):
         unpacked_struct = unpack('!HHHH', rawpacket.raw_data[start_padding:start_padding + 8])
 
         self.src_port = unpacked_struct[0]
@@ -28,6 +28,8 @@ class UDP:
 
         self.length = unpacked_struct[2]
         self.checksum = unpacked_struct[3]
+
+        self.payload_length = ip_payload_length - 8
 
     def swap_ports(self):
         """

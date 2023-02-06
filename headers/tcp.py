@@ -43,7 +43,7 @@ class TCP:
     Padding:        "0"s placed at the end of the header to ensure its length is a multiple of 32 bits words (4 bytes)
     """
 
-    def __init__(self, rawpacket, start_padding=0):
+    def __init__(self, rawpacket, start_padding=0, ip_payload_length=0):
         # extracting bytes up to the options field (20 bytes)
         # we need first to find the total length of the header (data offset) to know
         # the size of the options + padding
@@ -70,6 +70,8 @@ class TCP:
 
         if self.data_offset > 5:
             self.options_raw = rawpacket.raw_data[start_padding + 20:start_padding + 20 + (self.data_offset - 5) * 4]
+
+        self.payload_length = ip_payload_length - (self.data_offset * 32)
 
     @property
     def tcp_flags_str(self):

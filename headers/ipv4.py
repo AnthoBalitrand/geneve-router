@@ -75,10 +75,12 @@ class IPv4:
 
         # A basic IPv4 header is composed of 5 32-bits words
         # substracting it to the IHL field permits to calculate the number of options words
-        self.options_count = self.ihl - 5
-        if self.options_count:
+        self.options_words_count = self.ihl - 5
+        if self.options_words_count:
             # if there are options on the header, we extract it from the raw bytes of the received packet
-            self.options_raw = rawpacket.raw_data[start_padding + 20:start_padding + 20 + self.options_count * 4]
+            self.options_raw = rawpacket.raw_data[start_padding + 20:start_padding + 20 + self.options_words_count * 4]
+
+        self.payload_length = self.total_length - (self.ihl * 32)
 
     def swap_addresses(self):
         """

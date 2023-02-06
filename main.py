@@ -8,6 +8,7 @@ import signal
 from rawpacket import RawPacket, UnmatchedGenevePort
 import config
 import argparse
+from flow_tracker import FlowTracker
 try:
     import procname
     imp_procname = True
@@ -24,11 +25,15 @@ LOG_LEVELS = {
 }
 
 logger = None
+prog_break = False
+
 
 def shutdown(signum, sigframe):
     global logger
+    global prog_break
     logger.info(f"Received signal {signum}")
-    sys.exit(0)
+    prog_break = True
+
 
 def cli_parser():
     parser = argparse.ArgumentParser(
@@ -57,6 +62,12 @@ def cli_parser():
         default=config.LOG_FILE
     )
 
+    parser.add_argument(
+        "-t", "--flow-tracker",
+        action="store_true",
+        help="Enables flow tracker, which provides only start/stop flow logging information"
+    )
+
     return parser.parse_args()
 
 
@@ -65,8 +76,13 @@ def check_permission():
         sys.exit('Please start with root permissions')
 
 
-def start():
+def start(start_cli_args):
     global logger
+    global prog_break
+
+    logger.info(f"Start with PID {os.getpid()}")
+
+    flow_tracker = None
     logger.info("Logging initialized. Building sockets...")
 
     # the health_socket is the one used for the GWLB health-check requests
@@ -90,14 +106,20 @@ def start():
     sockets = [main_socket, bind_socket, health_socket]
     logger.info("Sockets are ready. Listening...")
 
-    while True:
+    if start_cli_args.flow_tracker:
+        logger.info("Starting flow tracker...")
+        flow_tracker = FlowTracker(logger)
+
+    while True and not prog_break:
         try:
-            read_sockets, _, _ = select.select(sockets, [], [])
+            # last parameter for select.select is a timeout which makes it non-blocking
+            # without this parameter, the function is blocking until there's one socket ready
+            read_sockets, _, _ = select.select(sockets, [], [], 1)
             for s_sock in read_sockets:
                 if s_sock == main_socket:
                     data, addr = s_sock.recvfrom(65565)
                     logger.debug(f"GENEVE - Received packet from {addr[0]}")
-                    if (geneve_response_packet := geneve_handler(data)):
+                    if (geneve_response_packet := geneve_handler(data, flow_tracker)):
                         s_sock.sendto(geneve_response_packet, addr)
                         logger.debug(f"GENEVE - Packet forwarded")
                 if s_sock == health_socket:
@@ -112,14 +134,17 @@ def start():
                     finally:
                         c_sock.close()
                 if s_sock == bind_socket:
-                    data, addr = s_sock.recvfrom(65565)
+                    _, _ = s_sock.recvfrom(65565)
                     # print(f"BIND SOCK - received from {addr} : {data.decode('utf-8')}")
-        except KeyboardInterrupt:
-            logger.warning("User-interrupt received. Closing sockets...")
-            health_socket.close()
-            main_socket.close()
-            bind_socket.close()
+        except Exception as e:
+            logger.error("Unexpected error")
             break
+
+    logger.warning("Exit requested. Closing sockets...")
+    health_socket.close()
+    main_socket.close()
+    bind_socket.close()
+
 
 def main():
     start_cli_args = cli_parser()
@@ -136,7 +161,7 @@ def main():
     )
 
     if start_cli_args.no_daemon:
-        start()
+        start(start_cli_args)
     else:
         with daemon.DaemonContext(
             pidfile=lockfile.FileLock('/var/run/geneve-router.pid'),
@@ -146,8 +171,11 @@ def main():
             },
             working_directory=os.getcwd(),
             files_preserve=[h.stream]
-        ):
-            start()
+        ) as d:
+            if imp_procname:
+                procname.setprocname('geneve-router')
+            start(start_cli_args)
+            d.join()
 
     return 0
 
@@ -179,10 +207,10 @@ def http_healthcheck_response():
     return header + '\n\n' + body
 
 
-def geneve_handler(geneve_packet):
+def geneve_handler(geneve_packet, flow_tracker):
     global logger
     try:
-        rec_packet = RawPacket(logger, geneve_packet)
+        rec_packet = RawPacket(logger, geneve_packet, flow_tracker)
     except UnmatchedGenevePort:
         logger.debug("Ignoring UDP packet receive on non-Geneve port")
         return None

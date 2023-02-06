@@ -5,4 +5,5 @@ terraform-files/.terraform
 terraform-files/.terraform*
 terraform-files/*.tfstate*
 terraform-files/*.pem
+terraform-files/*.bkp
 *.log

@@ -141,6 +141,7 @@ resource "aws_instance" "inspection_instance_1" {
     device_index         = 0
     network_interface_id = aws_network_interface.inspection_instance_1_eni.id
   }
+  user_data = file("inspection_instance_init.sh")
   tags = {
     Name = "Inspection_instance_1"
   }
@@ -154,6 +155,7 @@ resource "aws_instance" "inspection_instance_2" {
     device_index         = 0
     network_interface_id = aws_network_interface.inspection_instance_2_eni.id
   }
+  user_data = file("inspection_instance_init.sh")
   tags = {
     Name = "Inspection_instance_2"
   }
@@ -167,6 +169,7 @@ resource "aws_instance" "public_instance_1" {
     device_index         = 0
     network_interface_id = aws_network_interface.public_instance_1_eni.id
   }
+  user_data = file("public_instance_init.sh")
   tags = {
     Name = "Public_instance_1"
   }
@@ -180,6 +183,7 @@ resource "aws_instance" "public_instance_2" {
     device_index         = 0
     network_interface_id = aws_network_interface.public_instance_2_eni.id
   }
+  user_data = file("public_instance_init.sh")
   tags = {
     Name = "Public_instance_1"
   }

@@ -19,10 +19,12 @@ class ICMP:
     Checksum:       Calculated checksum of the ICMP header
     """
 
-    def __init__(self, rawpacket, start_padding=0):
+    def __init__(self, rawpacket, start_padding=0, ip_payload_length=0):
         unpacked_struct = unpack('!BBH4s', rawpacket.raw_data[start_padding:start_padding + 8])
 
         self.type = unpacked_struct[0]
         self.code = unpacked_struct[1]
         self.checksum = unpacked_struct[2]
         self.more = unpacked_struct[3]
+
+        self.payload_length = 0
