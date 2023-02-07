@@ -136,14 +136,17 @@ def start(start_cli_args):
                 if s_sock == bind_socket:
                     _, _ = s_sock.recvfrom(65565)
                     # print(f"BIND SOCK - received from {addr} : {data.decode('utf-8')}")
+        except KeyboardInterrupt:
+            break
         except Exception as e:
-            logger.error("Unexpected error")
+            logger.error(f"Unexpected error : {e}")
             break
 
     logger.warning("Exit requested. Closing sockets...")
     health_socket.close()
     main_socket.close()
     bind_socket.close()
+    logger.warning("Bye bye")
 
 
 def main():

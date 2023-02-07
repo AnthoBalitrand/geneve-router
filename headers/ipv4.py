@@ -80,7 +80,7 @@ class IPv4:
             # if there are options on the header, we extract it from the raw bytes of the received packet
             self.options_raw = rawpacket.raw_data[start_padding + 20:start_padding + 20 + self.options_words_count * 4]
 
-        self.payload_length = self.total_length - (self.ihl * 32)
+        self.payload_length = self.total_length - (self.ihl * 4)
 
     def swap_addresses(self):
         """
@@ -112,7 +112,7 @@ class IPv4:
                   self.dst_addr)
 
         # adding options if there was any in the initial header
-        if self.options_count:
+        if self.options_words_count:
             repacked_bytes.append(self.options_raw)
 
         # returns the built new header

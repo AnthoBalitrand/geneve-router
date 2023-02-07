@@ -23,7 +23,7 @@ class RawPacket:
             logger.debug(f"GENEVE - Inner packet info : UDP src_port : {self.inner_l4.src_port} / dst_port : {self.inner_l4.dst_port}")
         elif self.inner_ipv4.protocol == 6:
             self.inner_l4 = tcp.TCP(self, self.outter_ipv4.header_length_bytes + 8 + self.geneve.header_length_bytes + self.inner_ipv4.header_length_bytes, self.inner_ipv4.payload_length)
-            logger.debug(f"GENEVE - Inner packet info : TCP src_port : {self.inner_l4.src_port} / dst_port : {self.inner_l4.dst_port} / flags : {self.inner_tcp.tcp_flags_str}")
+            logger.debug(f"GENEVE - Inner packet info : TCP src_port : {self.inner_l4.src_port} / dst_port : {self.inner_l4.dst_port} / flags : {self.inner_l4.tcp_flags_str}")
         elif self.inner_ipv4.protocol == 1:
             self.inner_l4 = icmp.ICMP(self, self.outter_ipv4.header_length_bytes + 8 + self.geneve.header_length_bytes + self.inner_ipv4.header_length_bytes), self.inner_ipv4.payload_length
             logger.debug(f"GENEVE - Inner packet info : ICMP type : {self.inner_l4.type} / code : {self.inner_l4.code}")

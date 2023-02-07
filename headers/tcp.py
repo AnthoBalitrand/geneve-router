@@ -71,7 +71,7 @@ class TCP:
         if self.data_offset > 5:
             self.options_raw = rawpacket.raw_data[start_padding + 20:start_padding + 20 + (self.data_offset - 5) * 4]
 
-        self.payload_length = ip_payload_length - (self.data_offset * 32)
+        self.payload_length = ip_payload_length - (self.data_offset * 4)
 
     @property
     def tcp_flags_str(self):
