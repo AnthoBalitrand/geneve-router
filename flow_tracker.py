@@ -1,5 +1,8 @@
 import datetime
 import math
+import config
+import threading
+from time import sleep
 
 
 class Flow:
@@ -69,15 +72,32 @@ class Flow:
         return f"Flow {self.aws_flow_cookie} - IP {self.protocol} - SRC {self.src_addr}:{self.src_port} - DST {self.dst_addr}:{self.dst_port} - " \
                f"Pkts/bytes sent {self.pkts_sent}/{self.bytes_sent} - Pkts/bytes received {self.pkts_received}/{self.bytes_received} - State {self.state}"
 
+    def __del__(self):
+        self.logger.debug(f"FLOW-TRACKER - Post-deletion info for flow {self.aws_flow_cookie}")
+        self.logger.debug(self)
 
 class FlowTracker:
     def __init__(self, logger):
         self.tracked_flows = dict()
         self.logger = logger
         self.logger.info("FlowTracker initialized")
+        cleaner_thread = threading.Thread(target=self.tracker_cleaner)
+        cleaner_thread.daemon = True
+        cleaner_thread.start()
+        self.logger.info("FLOW-TRACKER - Cleaning thread initialized")
 
     def update_flow(self, flow_packet):
         if flow_packet.geneve.flow_cookie not in self.tracked_flows:
             self.tracked_flows[flow_packet.geneve.flow_cookie] = Flow(self.logger, flow_packet)
         else:
             self.tracked_flows.get(flow_packet.geneve.flow_cookie).update_flow(flow_packet)
+
+    def tracker_cleaner(self):
+        while True:
+            sleep(config.FLOW_TIMEOUT)
+            removable_flows_cookies = [
+                x for x in self.tracked_flows
+                if x.lastpacket_timestamp < math.floor(datetime.datetime.utcnow().timestamp()) - config.FLOW_TIMEOUT]
+            for flow_cookie in removable_flows_cookies:
+                del(self.tracked_flows[flow_cookie])
+            self.logger.info("FLOW-TRACKER - Cleaning thread run ended")

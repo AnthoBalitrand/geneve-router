@@ -114,7 +114,7 @@ def start(start_cli_args):
         try:
             # last parameter for select.select is a timeout which makes it non-blocking
             # without this parameter, the function is blocking until there's one socket ready
-            read_sockets, _, _ = select.select(sockets, [], [], 1)
+            read_sockets, _, _ = select.select(sockets, [], [], 10)
             for s_sock in read_sockets:
                 if s_sock == main_socket:
                     data, addr = s_sock.recvfrom(65565)
@@ -146,6 +146,7 @@ def start(start_cli_args):
     health_socket.close()
     main_socket.close()
     bind_socket.close()
+
     logger.warning("Bye bye")
 
 
