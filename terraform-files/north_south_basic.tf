@@ -173,6 +173,7 @@ resource "aws_instance" "public_instance_1" {
   tags = {
     Name = "Public_instance_1"
   }
+  depends_on = [aws_instance.inspection_instance_1, aws_instance.inspection_instance_2]
 }
 
 resource "aws_instance" "public_instance_2" {
@@ -187,6 +188,7 @@ resource "aws_instance" "public_instance_2" {
   tags = {
     Name = "Public_instance_1"
   }
+  depends_on = [aws_instance.inspection_instance_1, aws_instance.inspection_instance_2]
 }
 
 resource "aws_network_interface" "inspection_instance_1_eni" {

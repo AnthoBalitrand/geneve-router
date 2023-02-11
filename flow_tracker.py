@@ -6,13 +6,14 @@ from time import sleep
 
 
 class Flow:
-    def __init__(self, logger, flow_packet):
+    def __init__(self, logger, flow_packet, tracker):
         self.aws_flow_cookie = flow_packet.geneve.flow_cookie
         self.logger = logger
         self.state = None
         self.protocol = flow_packet.inner_ipv4.protocol
         self.src_addr = flow_packet.inner_ipv4.src_addr_str
         self.dst_addr = flow_packet.inner_ipv4.dst_addr_str
+        self.tracker = tracker
         if self.protocol in [6, 17]:
             self.src_port = flow_packet.inner_l4.src_port
             self.dst_port = flow_packet.inner_l4.dst_port
@@ -52,6 +53,8 @@ class Flow:
                 if flow_packet.inner_l4.ack and not flow_packet.inner_l4.syn:
                     self.state = 'CLOSED'
                     self.logger.debug(f"FLOW-TRACKER - Flow {flow_packet.geneve.flow_cookie} TCP moved to CLOSED state")
+                    if config.TCP_IMMEDIATE_CLEAN:
+                        self.tracker.delete_flow(self.aws_flow_cookie)
             elif self.state == 'FIN':
                 if flow_packet.inner_l4.fin and flow_packet.inner_l4.ack:
                     self.state = 'FINACK'
@@ -101,3 +104,6 @@ class FlowTracker:
             for flow_cookie in removable_flows_cookies:
                 del(self.tracked_flows[flow_cookie])
             self.logger.info("FLOW-TRACKER - Cleaning thread run ended")
+
+    def delete_flow(self, flow_cookie):
+        del(self.tracked_flows[flow_cookie])
