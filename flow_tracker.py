@@ -71,7 +71,7 @@ class Flow:
                 if flow_packet.inner_l4.syn and flow_packet.inner_l4.ack:
                     self.state = 'SYNACK'
         self.lastpacket_timestamp = math.floor(datetime.datetime.utcnow().timestamp())
-        self.logger.info(f"FLOW-TRACKER - Updated flow statistics for flow cookie {flow_packet.geneve.flow_cookie}")
+        self.logger.debug(f"FLOW-TRACKER - Updated flow statistics for flow cookie {flow_packet.geneve.flow_cookie}")
 
     def __repr__(self):
         return f"Flow {self.aws_flow_cookie} - IP {self.protocol} - SRC {self.src_addr}:{self.src_port} - DST {self.dst_addr}:{self.dst_port} - " \
@@ -79,7 +79,7 @@ class Flow:
 
     def __del__(self):
         self.logger.info(f"FLOW-TRACKER - Post-deletion info for flow {self.aws_flow_cookie}")
-        self.logger.debug(self)
+        self.logger.info(self)
 
 class FlowTracker:
     def __init__(self, logger):
