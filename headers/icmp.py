@@ -28,3 +28,9 @@ class ICMP:
         self.more = unpacked_struct[3]
 
         self.payload_length = 0
+
+    def __repr__(self):
+        return f"" \
+        f"{'-' * 10} ICMP header {'-' * 10}\
+        ICMP Type :      {self.type}\
+        ICMP Code :      {self.code}"

@@ -22,6 +22,8 @@ class Flow:
                     self.state = 'SYN'
                 else:
                     self.logger.error("FLOW-TRACKER - First packet for un-initialized TCP flow is not a SYN !")
+                    if config.TCP_NONSYN_BLOCK:
+                        self.tracker.delete_flow(self.aws_flow_cookie)
             else:
                 self.state = 'RUN'
         else:
@@ -91,7 +93,7 @@ class FlowTracker:
 
     def update_flow(self, flow_packet):
         if flow_packet.geneve.flow_cookie not in self.tracked_flows:
-            self.tracked_flows[flow_packet.geneve.flow_cookie] = Flow(self.logger, flow_packet)
+            self.tracked_flows[flow_packet.geneve.flow_cookie] = Flow(self.logger, flow_packet, self)
         else:
             self.tracked_flows.get(flow_packet.geneve.flow_cookie).update_flow(flow_packet)
 
@@ -99,8 +101,8 @@ class FlowTracker:
         while True:
             sleep(config.FLOW_TIMEOUT)
             removable_flows_cookies = [
-                x for x in self.tracked_flows
-                if x.lastpacket_timestamp < math.floor(datetime.datetime.utcnow().timestamp()) - config.FLOW_TIMEOUT]
+                x for x, y in self.tracked_flows.items()
+                if y.lastpacket_timestamp < math.floor(datetime.datetime.utcnow().timestamp()) - config.FLOW_TIMEOUT]
             for flow_cookie in removable_flows_cookies:
                 del(self.tracked_flows[flow_cookie])
             self.logger.info("FLOW-TRACKER - Cleaning thread run ended")

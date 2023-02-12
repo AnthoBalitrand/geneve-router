@@ -4,3 +4,4 @@ LOG_LEVEL = "debug"
 LOG_FILE = "logging.log"
 FLOW_TIMEOUT = 30
 TCP_IMMEDIATE_CLEAN = True
+TCP_NONSYN_BLOCK = True

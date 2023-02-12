@@ -9,6 +9,8 @@ from rawpacket import RawPacket, UnmatchedGenevePort
 import config
 import argparse
 from flow_tracker import FlowTracker
+
+#procname does not work on all platforms
 try:
     import procname
     imp_procname = True
@@ -117,7 +119,7 @@ def start(start_cli_args):
             read_sockets, _, _ = select.select(sockets, [], [], 10)
             for s_sock in read_sockets:
                 if s_sock == main_socket:
-                    data, addr = s_sock.recvfrom(65565)
+                    data, addr = s_sock.recvfrom(65584)
                     logger.debug(f"GENEVE - Received packet from {addr[0]}")
                     if (geneve_response_packet := geneve_handler(data, flow_tracker)):
                         s_sock.sendto(geneve_response_packet, addr)
@@ -134,8 +136,7 @@ def start(start_cli_args):
                     finally:
                         c_sock.close()
                 if s_sock == bind_socket:
-                    _, _ = s_sock.recvfrom(65565)
-                    # print(f"BIND SOCK - received from {addr} : {data.decode('utf-8')}")
+                    _, _ = s_sock.recvfrom(65536)
         except KeyboardInterrupt:
             break
         except Exception as e:

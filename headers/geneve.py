@@ -1,8 +1,10 @@
 from struct import unpack, pack_into
 
+
 class CriticalUnparsedGeneveHeader(Exception):
     "raised when Geneve options parsing is disabled and the endpoint receives a Geneve header with the Critical bit set"
     pass
+
 
 class Geneve:
     """
@@ -48,6 +50,7 @@ class Geneve:
         self.raw_options = None
 
         self.header_length_bytes = 8 + self.options_length * 4
+        self.header_end_byte = start_padding + self.header_length_bytes
 
         if self.options_length and parse_options:
             parsed_options_length = 0
@@ -75,7 +78,7 @@ class Geneve:
         for opt in self.parsed_options:
             repacked_bytes.extend(opt.repack())
 
-    def get_tunnel_option(self, option_class, option_type):
+    def get_header_option(self, option_class, option_type):
         for opt in self.parsed_options:
             if opt.option_class == option_class and opt.option_type == option_type:
                 return opt
@@ -83,7 +86,14 @@ class Geneve:
 
     @property
     def flow_cookie(self):
-        return self.get_tunnel_option(option_class=0x0108, option_type=3).option_raw.hex()
+        return self.get_header_option(option_class=0x0108, option_type=3).option_raw.hex()
+
+    def __repr__(self):
+        return f"" \
+               f"{'-'*9} Geneve header {'-'*9}\
+        Protocol type :  {self.protocol}\
+        VNI :            {self.vni}\
+        {[x for x in self.parsed_options]}"
 
 
 class GeneveOption:
@@ -139,3 +149,10 @@ class GeneveOption:
         repacked_bytes.append(self.option_raw)
 
         return repacked_bytes
+
+    def __repr__(self):
+        return f"\
+        Option class :   {self.option_class}\
+        Option type :    {self.option_type}\
+        Option length :  {self.option_length}\
+        Option :         {self.option_raw.hex()}"

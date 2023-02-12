@@ -55,6 +55,7 @@ class IPv4:
 
         self.ihl = unpacked_struct[0] & 0xF
         self.header_length_bytes = self.ihl * 4
+        self.header_end_byte = start_padding + (self.ihl * 4)
         self.dscp = unpacked_struct[1] >> 2
         self.ecn = unpacked_struct[1] & 0x3
         self.total_length = unpacked_struct[2]
@@ -139,21 +140,14 @@ class IPv4:
         Returns the string representation of the IPv4 object (header)
         :return: (str) String representation of the current IPv4 object instance
         """
-        return f"IPv4 header. Version {self.version}. Source IP {self.src_addr_str}. Destination IP {self.dst_addr_str}"
-
-    def update_checksum(self):
-        self.checksum = IPv4.calculate_checksum_for_bytes(self.repack())
-
-    @classmethod
-    def calculate_checksum_for_bytes(cls, header_bytes: bytes) -> int:
-        """Calculate the checksum for the provided header."""
-
-        def carry_around_add(a, b):
-            c = a + b
-            return (c & 0xffff) + (c >> 16)
-
-        s = 0
-        for i in range(0, len(header_bytes), 2):
-            w = header_bytes[i + 1] + (header_bytes[i] << 8)
-            s = carry_around_add(s, w)
-        return ~s & 0xffff
+        return f"" \
+               f"{'-'*10} IPv4 header {'-'*10}\
+        IHL :            {self.ihl}\
+        Total Length :   {self.total_length}\
+        Identification : {self.identification}\
+        DNF :            {self.dnf}\
+        Fragment offset :{self.fragment_offset}\
+        TTL :            {self.ttl}\
+        Protocol :       {self.protocol}\
+        Source address : {self.src_addr_str}\
+        Dest address :   {self.dst_addr_str}"

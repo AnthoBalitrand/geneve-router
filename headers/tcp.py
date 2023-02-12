@@ -83,3 +83,14 @@ class TCP:
         flags += "U" if self.urg else ""
         flags += "P" if self.psh else ""
         return flags
+
+    def __repr__(self):
+        return f"" \
+        f"{'-' * 10} TCP header {'-' * 11}\
+        Source port :    {self.src_port}\
+        Dest port :      {self.dst_port}\
+        Seq number :     {self.seq_num}\
+        ACK number :     {self.ack_num}\
+        Data offset :    {self.data_offset}\
+        Flags :          {self.tcp_flags_str}\
+        Window :         {self.window}"
