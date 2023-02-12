@@ -47,7 +47,7 @@ class TCP:
         # extracting bytes up to the options field (20 bytes)
         # we need first to find the total length of the header (data offset) to know
         # the size of the options + padding
-        unpacked_struct = unpack('!HH4I4IHHHH', rawpacket.raw_data[start_padding:start_padding + 20])
+        unpacked_struct = unpack('!HHIIHHHH', rawpacket.raw_data[start_padding:start_padding + 20])
 
         self.src_port = unpacked_struct[0]
         self.dst_port = unpacked_struct[1]

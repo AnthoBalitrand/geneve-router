@@ -141,7 +141,6 @@ def start(start_cli_args):
             break
         except Exception as e:
             logger.error(f"Unexpected error : {e}")
-            break
 
     logger.warning("Exit requested. Closing sockets...")
     health_socket.close()
