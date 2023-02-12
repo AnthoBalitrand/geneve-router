@@ -21,7 +21,7 @@ class Flow:
                 if flow_packet.inner_l4.syn and not flow_packet.inner_l4.ack:
                     self.state = 'SYN'
                 else:
-                    self.logger.error("FLOW-TRACKER - First packet for un-initialized TCP flow is not a SYN !")
+                    self.logger.warning("FLOW-TRACKER - First packet for un-initialized TCP flow is not a SYN !")
                     if config.TCP_NONSYN_BLOCK:
                         self.tracker.delete_flow(self.aws_flow_cookie)
             else:
@@ -36,7 +36,7 @@ class Flow:
         self.pkts_received = 0
         self.bytes_sent = flow_packet.inner_l4.payload_length
         self.bytes_received = 0
-        self.logger.debug(f"FLOW-TRACKER - New flow added (AWS flow cookie : {self.aws_flow_cookie})")
+        self.logger.info(f"FLOW-TRACKER - New flow added (AWS flow cookie : {self.aws_flow_cookie})")
 
     def update_flow(self, flow_packet):
         if flow_packet.inner_ipv4.dst_addr_str == self.dst_addr:
@@ -54,7 +54,7 @@ class Flow:
             if self.state == 'FINACK':
                 if flow_packet.inner_l4.ack and not flow_packet.inner_l4.syn:
                     self.state = 'CLOSED'
-                    self.logger.debug(f"FLOW-TRACKER - Flow {flow_packet.geneve.flow_cookie} TCP moved to CLOSED state")
+                    self.logger.info(f"FLOW-TRACKER - Flow {flow_packet.geneve.flow_cookie} TCP moved to CLOSED state")
                     if config.TCP_IMMEDIATE_CLEAN:
                         self.tracker.delete_flow(self.aws_flow_cookie)
             elif self.state == 'FIN':
@@ -66,19 +66,19 @@ class Flow:
             elif self.state == 'SYNACK':
                 if flow_packet.inner_l4.ack and not flow_packet.inner_l4.syn and not flow_packet.inner_l4.rst:
                     self.state = 'RUN'
-                    self.logger.debug(f"FLOW-TRACKER - Flow {flow_packet.geneve.flow_cookie} TCP moved to RUN state")
+                    self.logger.info(f"FLOW-TRACKER - Flow {flow_packet.geneve.flow_cookie} TCP moved to RUN state")
             elif self.state == 'SYN':
                 if flow_packet.inner_l4.syn and flow_packet.inner_l4.ack:
                     self.state = 'SYNACK'
         self.lastpacket_timestamp = math.floor(datetime.datetime.utcnow().timestamp())
-        self.logger.debug(f"FLOW-TRACKER - Updated flow statistics for flow cookie {flow_packet.geneve.flow_cookie}")
+        self.logger.info(f"FLOW-TRACKER - Updated flow statistics for flow cookie {flow_packet.geneve.flow_cookie}")
 
     def __repr__(self):
         return f"Flow {self.aws_flow_cookie} - IP {self.protocol} - SRC {self.src_addr}:{self.src_port} - DST {self.dst_addr}:{self.dst_port} - " \
                f"Pkts/bytes sent {self.pkts_sent}/{self.bytes_sent} - Pkts/bytes received {self.pkts_received}/{self.bytes_received} - State {self.state}"
 
     def __del__(self):
-        self.logger.debug(f"FLOW-TRACKER - Post-deletion info for flow {self.aws_flow_cookie}")
+        self.logger.info(f"FLOW-TRACKER - Post-deletion info for flow {self.aws_flow_cookie}")
         self.logger.debug(self)
 
 class FlowTracker:
