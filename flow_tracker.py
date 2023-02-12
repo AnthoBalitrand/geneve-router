@@ -7,6 +7,7 @@ from time import sleep
 
 class Flow:
     def __init__(self, logger, flow_packet, tracker):
+        self.full_init = False
         self.aws_flow_cookie = flow_packet.geneve.flow_cookie
         self.logger = logger
         self.state = None
@@ -37,6 +38,7 @@ class Flow:
         self.bytes_sent = flow_packet.inner_l4.payload_length
         self.bytes_received = 0
         self.logger.info(f"FLOW-TRACKER - New flow added (AWS flow cookie : {self.aws_flow_cookie})")
+        self.full_init = True
 
     def update_flow(self, flow_packet):
         if flow_packet.inner_ipv4.dst_addr_str == self.dst_addr:
@@ -78,8 +80,9 @@ class Flow:
                f"Pkts/bytes sent {self.pkts_sent}/{self.bytes_sent} - Pkts/bytes received {self.pkts_received}/{self.bytes_received} - State {self.state}"
 
     def __del__(self):
-        self.logger.info(f"FLOW-TRACKER - Post-deletion info for flow {self.aws_flow_cookie}")
-        self.logger.info(self)
+        if self.full_init:
+            self.logger.info(f"FLOW-TRACKER - Post-deletion info for flow {self.aws_flow_cookie}")
+            self.logger.info(self)
 
 class FlowTracker:
     def __init__(self, logger):
