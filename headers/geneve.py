@@ -89,11 +89,7 @@ class Geneve:
         return self.get_header_option(option_class=0x0108, option_type=3).option_raw.hex()
 
     def __repr__(self):
-        return f"" \
-               f"{'-'*9} Geneve header {'-'*9}\
-        Protocol type :  {self.protocol}\
-        VNI :            {self.vni}\
-        {[x for x in self.parsed_options]}"
+        return f"[Geneve   Protocol type:{self.protocol} VNI:{self.vni.hex()} {[x for x in self.parsed_options]}"
 
 
 class GeneveOption:
@@ -151,8 +147,4 @@ class GeneveOption:
         return repacked_bytes
 
     def __repr__(self):
-        return f"\
-        Option class :   {self.option_class}\
-        Option type :    {self.option_type}\
-        Option length :  {self.option_length}\
-        Option :         {self.option_raw.hex()}"
+        return f"[ Opt class:{self.option_class} Opt type:{self.option_type} Value:{self.option_raw.hex()} ]"

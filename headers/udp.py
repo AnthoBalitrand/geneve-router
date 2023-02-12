@@ -58,9 +58,4 @@ class UDP:
         Returns the string representation of the UDP object (header)
         :return: (str) String representation of the current UDP object instance
         """
-        return f"" \
-               f"{'-'*10} UDP header {'-'*11}\
-        Source port :   {self.src_port}\
-        Dest port :     {self.dst_port}\
-        Length :        {self.length}\
-        Checksum :      {self.checksum}"
+        return f"[UDP   SRC port:{self.src_port} DST port:{self.dst_port} Length:{self.length}  ]"

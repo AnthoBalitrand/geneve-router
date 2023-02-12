@@ -140,14 +140,6 @@ class IPv4:
         Returns the string representation of the IPv4 object (header)
         :return: (str) String representation of the current IPv4 object instance
         """
-        return f"" \
-               f"{'-'*10} IPv4 header {'-'*10}\
-        IHL :            {self.ihl}\
-        Total Length :   {self.total_length}\
-        Identification : {self.identification}\
-        DNF :            {self.dnf}\
-        Fragment offset :{self.fragment_offset}\
-        TTL :            {self.ttl}\
-        Protocol :       {self.protocol}\
-        Source address : {self.src_addr_str}\
-        Dest address :   {self.dst_addr_str}"
+
+        return f"[IPv4   Total length:{self.total_length} ID:{self.identification} DNF:{self.dnf} " \
+               f"Frag offset:{self.fragment_offset} TTL:{self.ttl} SRC:{self.src_addr_str} DST:{self.dst_addr_str}  ]"

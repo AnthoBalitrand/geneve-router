@@ -420,6 +420,13 @@ resource "aws_security_group" "public_instance_sg" {
     to_port   = 80
     cidr_blocks = ["0.0.0.0/0"]
   }
+  ingress {
+    description = "Public ICMP"
+    from_port = 0
+    protocol = "icmp"
+    to_port = 0
+    cidr_blocks = ["0.0.0.0/0"]
+  }
   egress {
     from_port = 0
     protocol  = "-1"
