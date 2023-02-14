@@ -118,6 +118,8 @@ resource "aws_lb_target_group" "inspection_instances" {
   health_check {
     port = 80
     protocol = "HTTP"
+    interval = 20
+    healthy_threshold = 2
   }
 }
 
@@ -173,7 +175,7 @@ resource "aws_instance" "public_instance_1" {
   tags = {
     Name = "Public_instance_1"
   }
-  depends_on = [aws_instance.inspection_instance_1, aws_instance.inspection_instance_2]
+  depends_on = [aws_instance.inspection_instance_1, aws_instance.inspection_instance_2, aws_vpc_endpoint.public_gwlb_endpoint_1]
 }
 
 resource "aws_instance" "public_instance_2" {
@@ -186,9 +188,9 @@ resource "aws_instance" "public_instance_2" {
   }
   user_data = file("public_instance_init.sh")
   tags = {
-    Name = "Public_instance_1"
+    Name = "Public_instance_2"
   }
-  depends_on = [aws_instance.inspection_instance_1, aws_instance.inspection_instance_2]
+  depends_on = [aws_instance.inspection_instance_1, aws_instance.inspection_instance_2, aws_vpc_endpoint.public_gwlb_endpoint_2]
 }
 
 resource "aws_network_interface" "inspection_instance_1_eni" {
