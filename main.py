@@ -168,7 +168,7 @@ def main():
                 signal.SIGTSTP: shutdown
             },
             working_directory=os.getcwd(),
-            files_preserve=[h.stream]
+            files_preserve=[h.stream] if h else []
         ) as d:
             setproctitle.setproctitle('geneve-router')
             start(start_cli_args)
