@@ -38,6 +38,7 @@ class Flow:
         self.bytes_sent = flow_packet.inner_l4.payload_length
         self.bytes_received = 0
         self.logger.info(f"FLOW-TRACKER - New flow added (AWS flow cookie : {self.aws_flow_cookie})")
+        self.logger.info(self)
         self.full_init = True
 
     def update_flow(self, flow_packet):
