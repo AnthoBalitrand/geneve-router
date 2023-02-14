@@ -184,7 +184,7 @@ def configure_logging(level, loggername, logfile, on_screen=True, force_logging=
     formatter = logging.Formatter(
         "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     )
-
+    h = None
     if not on_screen and force_logging:
         h = logging.handlers.WatchedFileHandler(logfile)
         h.setLevel(LOG_LEVELS.get(level, LOG_LEVELS["debug"]))
