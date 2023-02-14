@@ -9,13 +9,7 @@ from rawpacket import RawPacket, UnmatchedGenevePort
 import config
 import argparse
 from flow_tracker import FlowTracker
-
-#procname does not work on all platforms
-try:
-    import procname
-    imp_procname = True
-except ImportError:
-    imp_procname = False
+import setproctitle
 
 
 LOG_LEVELS = {
@@ -176,8 +170,7 @@ def main():
             working_directory=os.getcwd(),
             files_preserve=[h.stream]
         ) as d:
-            if imp_procname:
-                procname.setprocname('geneve-router')
+            setproctitle.setproctitle('geneve-router')
             start(start_cli_args)
             d.join()
 

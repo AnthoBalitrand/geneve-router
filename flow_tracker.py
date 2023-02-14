@@ -54,7 +54,7 @@ class Flow:
 
         if self.protocol == 6:
             if self.state == 'FINACK':
-                if flow_packet.inner_l4.ack and not flow_packet.inner_l4.syn:
+                if (flow_packet.inner_l4.ack or flow_packet.inner_l4.rst) and not flow_packet.inner_l4.syn:
                     self.state = 'CLOSED'
                     self.logger.info(f"FLOW-TRACKER - Flow {flow_packet.geneve.flow_cookie} TCP moved to CLOSED state")
                     if config.TCP_IMMEDIATE_CLEAN:
