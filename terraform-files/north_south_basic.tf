@@ -17,14 +17,6 @@ resource "aws_key_pair" "inspection_instances_kp" {
   public_key = tls_private_key.inspection_instances_pk.public_key_openssh
 }
 
-resource "null_resource" "previous" {}
-
-resource "time_sleep" "wait_3_minutes" {
-  depends_on = [null_resource.previous]
-
-  create_duration = "3m"
-}
-
 data "aws_ami" "amzn2-kernel" {
   most_recent = true
 
@@ -181,7 +173,7 @@ resource "aws_instance" "public_instance_1" {
   tags = {
     Name = "Public_instance_1"
   }
-  depends_on = [aws_instance.inspection_instance_1, aws_instance.inspection_instance_2, time_sleep.wait_3_minutes]
+  depends_on = [aws_instance.inspection_instance_1, aws_instance.inspection_instance_2]
 }
 
 resource "aws_instance" "public_instance_2" {
@@ -196,7 +188,7 @@ resource "aws_instance" "public_instance_2" {
   tags = {
     Name = "Public_instance_1"
   }
-  depends_on = [aws_instance.inspection_instance_1, aws_instance.inspection_instance_2, time_sleep.wait_3_minutes]
+  depends_on = [aws_instance.inspection_instance_1, aws_instance.inspection_instance_2]
 }
 
 resource "aws_network_interface" "inspection_instance_1_eni" {
