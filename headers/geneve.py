@@ -21,7 +21,6 @@ class Geneve:
     |                                                               |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-    Source port:    The source port of the UDP datagram
     Version:        Has to be 0, or packet must be dropped (or treated as UDP packet with unknown payload)
     Options length: The length (in 32 bits words count) of the options part of the header
     O (control):    Indicates a Control packet which should not be forwarded by the tunnel endpoints
@@ -105,7 +104,6 @@ class GeneveOption:
     |                                                               |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-    Source port:    The source port of the UDP datagram
     Option Class:   IANA Geneve Option Class identifier (Type namespace)
     Type:           The option type (in the Option Class namespace).
                     The first bit of the Type field indicates if the option is critical.
