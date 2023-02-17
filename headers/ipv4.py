@@ -47,7 +47,7 @@ class IPv4:
         # extracting bytes up to the options field
         # we need first to find the total length of the header (IHL) to know
         # the size of the options + padding
-        unpacked_struct = unpack('!BBHHHBBH4s4s', rawpacket.raw_data[start_padding:start_padding + 20])
+        unpacked_struct = unpack('!BBHHHBBH4s4s', rawpacket[start_padding:start_padding + 20])
 
         self.version = unpacked_struct[0] >> 4
         if self.version != 4:
@@ -79,7 +79,7 @@ class IPv4:
         self.options_words_count = self.ihl - 5
         if self.options_words_count:
             # if there are options on the header, we extract it from the raw bytes of the received packet
-            self.options_raw = rawpacket.raw_data[start_padding + 20:start_padding + 20 + self.options_words_count * 4]
+            self.options_raw = rawpacket[start_padding + 20:start_padding + 20 + self.options_words_count * 4]
 
         self.payload_length = self.total_length - (self.ihl * 4)
 

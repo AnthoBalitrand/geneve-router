@@ -21,7 +21,7 @@ class UDP:
     """
 
     def __init__(self, rawpacket, start_padding=0, ip_payload_length=0):
-        unpacked_struct = unpack('!HHHH', rawpacket.raw_data[start_padding:start_padding + 8])
+        unpacked_struct = unpack('!HHHH', rawpacket[start_padding:start_padding + 8])
 
         self.src_port = unpacked_struct[0]
         self.dst_port = unpacked_struct[1]

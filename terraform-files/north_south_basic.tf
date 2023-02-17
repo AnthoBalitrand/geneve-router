@@ -1,5 +1,10 @@
-provider "aws" {
-  region = "eu-west-3"
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 4.0"
+    }
+  }
 }
 
 variable "inspection_instances_key_name" {
@@ -456,6 +461,26 @@ resource "aws_lb_listener" "gwlb-listener" {
     target_group_arn = aws_lb_target_group.inspection_instances.arn
     type = "forward"
   }
+}
+
+output "public_instance_1" {
+  value = aws_instance.public_instance_1.public_ip
+  description = "Public IP address of public_instance_1"
+}
+
+output "public_instance_2" {
+  value = aws_instance.public_instance_1.public_ip
+  description = "Public IP address of public_instance_1"
+}
+
+output "inspection_instance_1" {
+  value = aws_instance.inspection_instance_1.public_ip
+  description = "Public IP address of inspection_instance_1"
+}
+
+output "inspection_instance_2" {
+  value = aws_instance.inspection_instance_2.public_ip
+  description = "Public IP address of inspection_instance_2"
 }
 
 output "private_key" {

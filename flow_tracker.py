@@ -103,7 +103,7 @@ class FlowTracker:
 
     def tracker_cleaner(self):
         while True:
-            sleep(config.FLOW_TIMEOUT)
+            sleep(min(config.FLOW_TIMEOUT, config.TCP_FLOW_TIMEOUT))
             removable_flows_cookies = [
                 x for x, y in self.tracked_flows.items()
                 if y.lastpacket_timestamp < math.floor(datetime.datetime.utcnow().timestamp()) - config.FLOW_TIMEOUT

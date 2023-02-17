@@ -33,7 +33,7 @@ class Geneve:
     """
 
     def __init__(self, rawpacket, start_padding=0, parse_options=True):
-        unpacked_struct = unpack('!BBH3sB', rawpacket.raw_data[start_padding:start_padding + 8])
+        unpacked_struct = unpack('!BBH3sB', rawpacket[start_padding:start_padding + 8])
 
         self.version = unpacked_struct[0] >> 6
         # The option length fields represent the options size in words count (multiple of 4 bytes)
@@ -57,7 +57,7 @@ class Geneve:
                 self.parsed_options.append(GeneveOption(rawpacket, start_padding + 8 + parsed_options_length))
                 parsed_options_length += self.parsed_options[-1].total_length
         elif not parse_options and not self.critical:
-            self.raw_options = rawpacket.raw_data[start_padding + 8:start_padding + 8 + self.options_length * 4]
+            self.raw_options = rawpacket[start_padding + 8:start_padding + 8 + self.options_length * 4]
         elif not parse_options and self.critical:
             raise CriticalUnparsedGeneveHeader
 
@@ -112,7 +112,7 @@ class GeneveOption:
     """
 
     def __init__(self, rawpacket, start_padding=8):
-        unpacked_struct = unpack('!HBB', rawpacket.raw_data[start_padding:start_padding + 4])
+        unpacked_struct = unpack('!HBB', rawpacket[start_padding:start_padding + 4])
 
         # Class 0x0108 = Amazon
         self.option_class = unpacked_struct[0]
@@ -126,7 +126,7 @@ class GeneveOption:
         self.option_length = unpacked_struct[2] & 0x1F
         self.total_length = self.option_length * 4 + 4
 
-        self.option_raw = rawpacket.raw_data[start_padding + 4:start_padding + 4 + self.option_length * 4]
+        self.option_raw = rawpacket[start_padding + 4:start_padding + 4 + self.option_length * 4]
 
     def repack(self):
         """
