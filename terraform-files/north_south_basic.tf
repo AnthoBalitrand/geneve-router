@@ -469,7 +469,7 @@ output "public_instance_1" {
 }
 
 output "public_instance_2" {
-  value = aws_instance.public_instance_1.public_ip
+  value = aws_instance.public_instance_2.public_ip
   description = "Public IP address of public_instance_1"
 }
 

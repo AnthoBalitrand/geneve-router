@@ -42,7 +42,7 @@ class RawPacket:
 
         # if raw data comes from the raw socket, we need to swap the IP addresses and decrease the TTL as the kernel
         # will not do that for us
-        if udp_only:
+        if not udp_only:
             self.outter_ipv4.swap_addresses()
             self.outter_ipv4.ttl -= 1
 
