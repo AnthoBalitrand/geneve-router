@@ -50,7 +50,7 @@ class RawPacket:
     def resp(self):
         # if we need to send back the data to a raw buffer, send back the repacked (updated) IP header, and then
         # the rest of the raw data untouched
-        if self.udp_only:
+        if not self.udp_only:
             return b''.join([
                 self.outter_ipv4.repack(),
                 self.raw_data[self.outter_ipv4.header_length_bytes::]
