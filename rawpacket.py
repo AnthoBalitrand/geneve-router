@@ -8,42 +8,52 @@ class UnmatchedGenevePort(Exception):
 
 
 class RawPacket:
-    def __init__(self, logger, raw_geneve_packet, flow_tracker):
+    def __init__(self, logger, raw_geneve_packet, flow_tracker, raw):
+        self.raw = raw
         self.raw_data = raw_geneve_packet
-        self.outter_ipv4 = ipv4.IPv4(self)
-        self.outter_udp = udp.UDP(self, self.outter_ipv4.header_end_byte)
-        if not self.outter_udp.dst_port == config.GENEVE_PORT:
-            raise UnmatchedGenevePort
-        self.geneve = geneve.Geneve(self, self.outter_ipv4.header_length_bytes + 8)
-        #logger.debug(f"GENEVE - AWS Flow Cookie option value : {self.geneve.flow_cookie}")
+
+        # if the data is coming from a raw socket (which should be the case), let's unpack the outter IP/UDP headers
+        if raw:
+            self.outter_ipv4 = ipv4.IPv4(self)
+            self.outter_udp = udp.UDP(self, self.outter_ipv4.header_end_byte)
+            if not self.outter_udp.dst_port == config.GENEVE_PORT:
+                raise UnmatchedGenevePort
+
+        self.geneve = geneve.Geneve(self, 0 if not raw else self.outter_ipv4.header_length_bytes + 8)
         self.inner_ipv4 = ipv4.IPv4(self, self.geneve.header_end_byte)
-        #logger.debug(f"GENEVE - Inner packet info : src_ip = {self.inner_ipv4.src_addr_str} / dst_ip = {self.inner_ipv4.dst_addr_str} / proto = {self.inner_ipv4.protocol}")
         if self.inner_ipv4.protocol == 17:
             self.inner_l4 = udp.UDP(self, self.inner_ipv4.header_end_byte, self.inner_ipv4.payload_length)
-            #logger.debug(f"GENEVE - Inner packet info : UDP src_port : {self.inner_l4.src_port} / dst_port : {self.inner_l4.dst_port}")
         elif self.inner_ipv4.protocol == 6:
             self.inner_l4 = tcp.TCP(self, self.inner_ipv4.header_end_byte, self.inner_ipv4.payload_length)
-            #logger.debug(f"GENEVE - Inner packet info : TCP src_port : {self.inner_l4.src_port} / dst_port : {self.inner_l4.dst_port} / flags : {self.inner_l4.tcp_flags_str}")
         elif self.inner_ipv4.protocol == 1:
             self.inner_l4 = icmp.ICMP(self, self.inner_ipv4.header_end_byte, self.inner_ipv4.payload_length)
-            #logger.debug(f"GENEVE - Inner packet info : ICMP type : {self.inner_l4.type} / code : {self.inner_l4.code}")
         else:
             logger.error(f"GENEVE - Unknown inner packet type ({self.inner_ipv4.protocol})")
             self.inner_l4 = None
 
-        logger.debug(f"GENEVE - {self.outter_ipv4} {self.outter_udp} {self.geneve} {self.inner_ipv4} {self.inner_l4}")
+        if raw:
+            logger.debug(f"GENEVE - {self.outter_ipv4} {self.outter_udp} {self.geneve} {self.inner_ipv4} {self.inner_l4}")
+        else:
+            logger.debug(
+                f"GENEVE - {self.geneve} {self.inner_ipv4} {self.inner_l4}")
 
         if flow_tracker and self.inner_ipv4.protocol in [1, 6, 17]:
             flow_tracker.update_flow(self)
 
-        # swap outter IPv4 header addresses (not outter UDP header ports)
-        # plus decrement TTL value
-        self.outter_ipv4.swap_addresses()
-        self.outter_ipv4.ttl -= 1
+        # if raw data comes from the raw socket, we need to swap the IP addresses and decrease the TTL as the kernel
+        # will not do that for us
+        if raw:
+            self.outter_ipv4.swap_addresses()
+            self.outter_ipv4.ttl -= 1
 
     @property
     def resp(self):
-        return b''.join([
-            self.outter_ipv4.repack(),
-            self.raw_data[self.outter_ipv4.header_length_bytes::]
-        ])
+        # if we need to send back the data to a raw buffer, send back the repacked (updated) IP header, and then
+        # the rest of the raw data untouched
+        if self.raw:
+            return b''.join([
+                self.outter_ipv4.repack(),
+                self.raw_data[self.outter_ipv4.header_length_bytes::]
+            ])
+        # else (if it comes from a bind UDP socket), let's just send back the full raw data untouched
+        return self.raw_data

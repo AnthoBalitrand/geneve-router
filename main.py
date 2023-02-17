@@ -64,6 +64,12 @@ def cli_parser():
         help="Enables flow tracker, which provides only start/stop flow logging information"
     )
 
+    parser.add_argument(
+        "-u", "--udp-only",
+        action="store_true",
+        help="Start without using raw socket (only UDP bind socket)"
+    )
+
     return parser.parse_args()
 
 
@@ -80,26 +86,37 @@ def start(start_cli_args):
 
     flow_tracker = None
     logger.info("Logging initialized. Building sockets...")
+    sockets = list()
 
     # the health_socket is the one used for the GWLB health-check requests
     health_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP)
     health_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     health_socket.bind(('0.0.0.0', config.HEALTH_CHECK_PORT))
     health_socket.listen(3)
+    sockets.append(health_socket)
 
     # the bind_socket is only used to "announce" that we want to receive UDP datagrams for GENEVE_PORT
+    # it is the one used for receiving the Geneve payloads if started with the --udp-only parameter
+    # (in this case, the main_socket below is not used)
+    # Using this mode permits to start without root privileges, but it has an impact in the way Geneve packets will
+    # be sent back to the GWLB : when sending using a binded SOCK_DGRAM socket, the source port of the sent packets
+    # will always be the port used for the bind. Then, Geneve packets will be sent to port 6081, with a source port
+    # of 6081. AWS could block it at some time (this is even weird that it works actually)
     bind_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     bind_socket.bind(('0.0.0.0', config.GENEVE_PORT))
+    sockets.append(bind_socket)
 
-    # the main_socket is the one used to receive the Geneve packets
-    main_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_UDP)
-    # IP_HDRINCL permits to ask the system that we want to receive (and create) our own IP/UDP headers
-    # this is needed as Geneve requires that we send back the "routed" traffic on the GENEVE_PORT (src/dst ports
-    # are not swapped)
-    main_socket.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
-    main_socket.bind(('0.0.0.0', config.GENEVE_PORT))
 
-    sockets = [main_socket, bind_socket, health_socket]
+    if not start_cli_args.udp_only:
+        # the raw_socket is the one used to receive the Geneve packets
+        raw_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_UDP)
+        # IP_HDRINCL permits to ask the system that we want to receive (and create) our own IP/UDP headers
+        # this is needed as Geneve requires that we send back the "routed" traffic on the GENEVE_PORT (src/dst ports
+        # are not swapped)
+        raw_socket.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
+        raw_socket.bind(('0.0.0.0', 0))
+        sockets.append(raw_socket)
+
     logger.info("Sockets are ready. Listening...")
 
     if start_cli_args.flow_tracker:
@@ -112,9 +129,9 @@ def start(start_cli_args):
             # without this parameter, the function is blocking until there's one socket ready
             read_sockets, _, _ = select.select(sockets, [], [], 10)
             for s_sock in read_sockets:
-                if s_sock == main_socket:
-                    data, addr = s_sock.recvfrom(65584)
-                    logger.debug(f"GENEVE - Received packet from {addr[0]}")
+                if not start_cli_args.udp_only and s_sock == raw_socket:
+                    data, addr = s_sock.recvfrom(65536)
+                    logger.debug(f"GENEVE - Received raw packet from {addr[0]}:{addr[1]}")
                     if (geneve_response_packet := geneve_handler(data, flow_tracker)):
                         s_sock.sendto(geneve_response_packet, addr)
                         logger.debug(f"GENEVE - Packet forwarded")
@@ -129,24 +146,32 @@ def start(start_cli_args):
                         logger.warning(f"HEALTH-CHECK - Timeout raised on socket from {c_addr[0]}:{c_addr[1]}")
                     finally:
                         c_sock.close()
-                if s_sock == bind_socket:
-                    _, _ = s_sock.recvfrom(65536)
+                if start_cli_args.udp_only and s_sock == bind_socket:
+                    data, addr = s_sock.recvfrom(65508)
+                    logger.debug(f"GENEVE - Received packet from {addr[0]}:{addr[1]}")
+                    if (geneve_response_packet := geneve_handler(data, flow_tracker, raw=False)):
+                        s_sock.sendto(geneve_response_packet, addr)
+                        logger.debug(f"GENEVE - Packet forwarded")
+                elif s_sock == bind_socket:
+                    _, _ = s_sock.recvfrom(1)
         except KeyboardInterrupt:
             break
         except Exception as e:
             logger.error(f"Unexpected error : {e}")
 
     logger.warning("Exit requested. Closing sockets...")
-    health_socket.close()
-    main_socket.close()
-    bind_socket.close()
+
+    for s in sockets:
+        s.close()
 
     logger.warning("Bye bye")
 
 
 def main():
     start_cli_args = cli_parser()
-    check_permission()
+
+    if not start_cli_args.udp_only:
+        check_permission()
 
     print("Starting and initializing logger...")
     global logger
@@ -204,10 +229,10 @@ def http_healthcheck_response():
     return header + '\n\n' + body
 
 
-def geneve_handler(geneve_packet, flow_tracker):
+def geneve_handler(geneve_packet, flow_tracker, raw=True):
     global logger
     try:
-        rec_packet = RawPacket(logger, geneve_packet, flow_tracker)
+        rec_packet = RawPacket(logger, geneve_packet, flow_tracker, raw)
     except UnmatchedGenevePort:
         logger.debug("Ignoring packet received on non-Geneve port")
         return None
