@@ -134,7 +134,10 @@ def start(start_cli_args):
                     else:
                         logger.debug(f"GENEVE - Received raw packet from {addr[0]}:{addr[1]}")
                     if (geneve_response_packet := geneve_handler(data, flow_tracker, start_cli_args.udp_only)):
-                        s_sock.sendto(geneve_response_packet, addr)
+                        # we need to specify the destination of the packet (addr[0], config.GENEVE_PORT) only for the
+                        # case where we are using an UDP socket. When using RAW socket, this value needs to be there too
+                        # but is overrided by the values of the forged IP/UDP headers
+                        s_sock.sendto(geneve_response_packet, (addr[0], config.GENEVE_PORT))
                         logger.debug(f"GENEVE - Packet forwarded")
                 if s_sock == health_socket:
                     c_sock, c_addr = s_sock.accept()
