@@ -6,5 +6,8 @@ terraform-files/.terraform*
 terraform-files/*.tfstate*
 terraform-files/*.pem
 terraform-files/*.bkp
+terraform-files/*.dtmp
 terraform-files/~*
 *.log
+**/.DS_Store
+.DS_Store
