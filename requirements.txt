@@ -1,3 +1,3 @@
-python-daemon
-lockfile
-setproctitle
+lockfile==0.12.2
+python_daemon==3.0.1
+setproctitle==1.3.2
