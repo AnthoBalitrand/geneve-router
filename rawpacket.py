@@ -79,7 +79,7 @@ class RawPacket:
             self.logger.debug(f"post-processing outter_udp : {self.outter_udp}")
             self.logger.debug(f"post-processing geneve : {self.geneve}")
             self.logger.debug(f"post-processing inner_ipv4 : {self.inner_ipv4}")
-            self.logger.debug(f"post-processing inner_l4 : {self.inner_ipv4}")
+            self.logger.debug(f"post-processing inner_l4 : {self.inner_l4}")
             return b''.join([
                 self.outter_ipv4.repack(), 
                 self.outter_udp.repack(),
