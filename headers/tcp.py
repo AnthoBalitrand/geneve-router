@@ -70,7 +70,8 @@ class TCP:
 
         if self.data_offset > 5:
             self.options_raw = rawpacket[start_padding + 20:start_padding + 20 + (self.data_offset - 5) * 4]
-        else self.options_raw = None
+        else :
+            self.options_raw = None
 
         self.payload_length = ip_payload_length - (self.data_offset * 4)
 
