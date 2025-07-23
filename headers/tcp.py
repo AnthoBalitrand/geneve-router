@@ -106,7 +106,7 @@ class TCP:
             self.checksum, 
             self.urg_pointer)
 
-        if self.option_raw:
+        if self.options_raw:
             repacked_bytes.extend(self.options_raw)
 
         return repacked_bytes
