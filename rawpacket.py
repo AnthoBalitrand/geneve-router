@@ -23,6 +23,20 @@ class RawPacket:
         self.inner_ipv4 = ipv4.IPv4(self.raw_data, self.geneve.header_end_byte)
         if self.inner_ipv4.protocol == 17:
             self.inner_l4 = udp.UDP(self.raw_data, self.inner_ipv4.header_end_byte, self.inner_ipv4.payload_length)
+            if self.inner_l4.dst_port in [500, 4500]:
+                self.inner_l4.swap_ports()
+                self.inner_ipv4.swap_addresses()
+                if self.raw_data[self.inner_l4.header_end_byte::].decode('utf-8') == "ping":
+                    self.raw_data = bytearray(self.raw_data)
+                    self.raw_data[self.inner_l4.header_end_byte:self.inner_l4.header_end_byte+4] = "pong".encode('utf-8')
+                    extension_info = f" from {self.outter_ipv4.dst_addr}".encode('utf-8')
+                    extension_length = len(extension_info)
+                    self.raw_data.extend(extension_info)
+                    self.raw_data = bytes(self.raw_data)
+                    self.inner_l4.length += extension_length
+                    self.inner_ipv4.total_length += extension_length
+                    self.outter_udp.length += extension_length
+                    self.outter_ipv4.total_length += extension_length
         elif self.inner_ipv4.protocol == 6:
             self.inner_l4 = tcp.TCP(self.raw_data, self.inner_ipv4.header_end_byte, self.inner_ipv4.payload_length)
         elif self.inner_ipv4.protocol == 1:
@@ -52,8 +66,17 @@ class RawPacket:
         # the rest of the raw data untouched
         if not self.udp_only:
             return b''.join([
-                self.outter_ipv4.repack(),
-                self.raw_data[self.outter_ipv4.header_length_bytes::]
-            ])
+                self.outter_ipv4.repack(), 
+                self.outter_udp.repack(),
+                self.geneve.repack(),
+                self.inner_ipv4.repack(),
+                self.inner_l4.repack(),
+                self.raw_data[self.inner_l4.header_end_byte::]
+                ])
         # else (if it comes from a bind UDP socket), let's just send back the full raw data untouched
-        return self.raw_data
+        return b''.join([
+            self.geneve.repack(),
+            self.inner_ipv4.repack(),
+            self.inner_l4.repack(),
+            self.raw_data[self.inner_l4.header_end_byte::]
+            ])

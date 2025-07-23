@@ -77,6 +77,8 @@ class Geneve:
         for opt in self.parsed_options:
             repacked_bytes.extend(opt.repack())
 
+        return repacked_bytes
+
     def get_header_option(self, option_class, option_type):
         for opt in self.parsed_options:
             if opt.option_class == option_class and opt.option_type == option_type:

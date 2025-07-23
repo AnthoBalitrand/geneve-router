@@ -30,6 +30,7 @@ class UDP:
         self.checksum = unpacked_struct[3]
 
         self.payload_length = ip_payload_length - 8
+        self.header_end_byte = start_padding + 8
 
     def swap_ports(self):
         """
