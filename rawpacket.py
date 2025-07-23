@@ -1,5 +1,6 @@
 from headers import ipv4, icmp, tcp, udp, geneve
 import config
+import ipaddress
 
 
 class UnmatchedGenevePort(Exception):
@@ -44,7 +45,7 @@ class RawPacket:
                     self.raw_data = self.raw_data[:-5]
                     extension_info = bytearray()
                     extension_info.extend("pong from ".encode('utf-8'))
-                    extension_info.extend(self.outter_ipv4.dst_addr)
+                    extension_info.extend(str(ipaddress.IPv4Address(self.inner_l4.src_addr)).encode('utf-8'))
                     extension_info.extend("\n".encode('utf-8'))
                     extension_length = len(extension_info) - 4
                     logger.debug(f"extension_info : {extension_info} / extension_length : {extension_length}")
