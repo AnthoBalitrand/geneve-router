@@ -41,9 +41,9 @@ class RawPacket:
                 self.logger.debug(self.raw_data[self.inner_l4.header_end_byte::])
                 if self.raw_data[self.inner_l4.header_end_byte::].decode('utf-8').strip() == "ping":
                     self.raw_data = bytearray(self.raw_data)
-                    self.raw_data[self.inner_l4.header_end_byte:self.inner_l4.header_end_byte+4] = "pong".encode('utf-8')
-                    extension_info = f" from {self.outter_ipv4.dst_addr}\n".encode('utf-8')
-                    extension_length = len(extension_info)
+                    self.raw_data = self.raw_data[:-5]
+                    extension_info = f"pong from {self.outter_ipv4.dst_addr}\n".encode('utf-8')
+                    extension_length = len(extension_info) - 4
                     self.raw_data.extend(extension_info)
                     self.raw_data = bytes(self.raw_data)
                     self.inner_l4.length += extension_length
