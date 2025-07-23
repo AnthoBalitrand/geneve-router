@@ -19,19 +19,22 @@ class RawPacket:
             self.outter_udp = udp.UDP(self.raw_data, self.outter_ipv4.header_end_byte)
             if not self.outter_udp.dst_port == config.GENEVE_PORT:
                 raise UnmatchedGenevePort
-            self.logger.debug(f"pre-processing outter_ipv4 : {self.outter_ipv4}")
-            self.logger.debug(f"pre-processing outter_udp : {self.outter_udp}")
+            #self.logger.debug(f"pre-processing outter_ipv4 : {self.outter_ipv4}")
+            #self.logger.debug(f"pre-processing outter_udp : {self.outter_udp}")
 
         self.geneve = geneve.Geneve(self.raw_data, 0 if udp_only else self.outter_ipv4.header_length_bytes + 8)
-        self.logger.debug(f"pre-processing geneve : {self.geneve}")
+        #self.logger.debug(f"pre-processing geneve : {self.geneve}")
 
         self.inner_ipv4 = ipv4.IPv4(self.raw_data, self.geneve.header_end_byte)
-        self.logger.debug(f"pre-precessing inner_ipv4 : {self.inner_ipv4}")
+        #self.logger.debug(f"pre-precessing inner_ipv4 : {self.inner_ipv4}")
 
         if self.inner_ipv4.protocol == 17:
             self.inner_l4 = udp.UDP(self.raw_data, self.inner_ipv4.header_end_byte, self.inner_ipv4.payload_length)
-            self.logger.debug(f"pre-processing inner_l4 : {self.inner_l4}")
+            #self.logger.debug(f"pre-processing inner_l4 : {self.inner_l4}")
             if self.inner_l4.dst_port in [500, 4500]:
+                self.logger.debug(f"pre-processing geneve : {self.geneve}")
+                self.logger.debug(f"pre-precessing inner_ipv4 : {self.inner_ipv4}")
+                self.logger.debug(f"pre-processing inner_l4 : {self.inner_l4}")
                 self.inner_l4.swap_ports()
                 self.inner_ipv4.swap_addresses()
                 if self.raw_data[self.inner_l4.header_end_byte::].decode('utf-8') == "ping":
@@ -47,10 +50,10 @@ class RawPacket:
                     self.outter_ipv4.total_length += extension_length
         elif self.inner_ipv4.protocol == 6:
             self.inner_l4 = tcp.TCP(self.raw_data, self.inner_ipv4.header_end_byte, self.inner_ipv4.payload_length)
-            self.logger.debug(f"pre-processing inner_l4 : {self.inner_l4}")
+            #self.logger.debug(f"pre-processing inner_l4 : {self.inner_l4}")
         elif self.inner_ipv4.protocol == 1:
             self.inner_l4 = icmp.ICMP(self.raw_data, self.inner_ipv4.header_end_byte, self.inner_ipv4.payload_length)
-            self.logger.debug(f"pre-processing inner_l4 : {self.inner_l4}")
+            #self.logger.debug(f"pre-processing inner_l4 : {self.inner_l4}")
         else:
             self.logger.error(f"GENEVE - Unknown inner packet type ({self.inner_ipv4.protocol})")
             self.inner_l4 = None
@@ -75,11 +78,12 @@ class RawPacket:
         # if we need to send back the data to a raw buffer, send back the repacked (updated) IP header, and then
         # the rest of the raw data untouched
         if not self.udp_only:
-            self.logger.debug(f"post-processing outter_ipv4 : {self.outter_ipv4}")
-            self.logger.debug(f"post-processing outter_udp : {self.outter_udp}")
-            self.logger.debug(f"post-processing geneve : {self.geneve}")
-            self.logger.debug(f"post-processing inner_ipv4 : {self.inner_ipv4}")
-            self.logger.debug(f"post-processing inner_l4 : {self.inner_l4}")
+            if self.inner_l4.src_port in [500, 4500]:
+                self.logger.debug(f"post-processing outter_ipv4 : {self.outter_ipv4}")
+                self.logger.debug(f"post-processing outter_udp : {self.outter_udp}")
+                self.logger.debug(f"post-processing geneve : {self.geneve}")
+                self.logger.debug(f"post-processing inner_ipv4 : {self.inner_ipv4}")
+                self.logger.debug(f"post-processing inner_l4 : {self.inner_l4}")
             return b''.join([
                 self.outter_ipv4.repack(), 
                 self.outter_udp.repack(),
@@ -89,9 +93,9 @@ class RawPacket:
                 self.raw_data[self.inner_l4.header_end_byte::]
                 ])
         # else (if it comes from a bind UDP socket), let's just send back the full raw data untouched
-        self.logger.debug(f"post-processing geneve : {self.geneve}")
-        self.logger.debug(f"post-processing inner_ipv4 : {self.inner_ipv4}")
-        self.logger.debug(f"post-processing inner_l4 : {self.inner_l4}")
+        #self.logger.debug(f"post-processing geneve : {self.geneve}")
+        #self.logger.debug(f"post-processing inner_ipv4 : {self.inner_ipv4}")
+        #self.logger.debug(f"post-processing inner_l4 : {self.inner_l4}")
         return b''.join([
             self.geneve.repack(),
             self.inner_ipv4.repack(),
