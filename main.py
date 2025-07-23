@@ -230,13 +230,16 @@ def geneve_handler(geneve_packet, flow_tracker, udp_only=False):
     global logger
     try:
         rec_packet = RawPacket(logger, geneve_packet, flow_tracker, udp_only)
+        logger.debug(rec_packet)
     except UnmatchedGenevePort:
         logger.debug("Ignoring packet received on non-Geneve port")
         return None
     except Exception as e:
         logger.error(f"Unknown error while parsing new packet : {e}")
         return None
-    return rec_packet.resp
+    resp = rec_packet.resp
+    logger.debug(resp)
+    return resp
 
 
 if __name__ == "__main__":
