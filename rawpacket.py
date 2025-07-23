@@ -39,6 +39,7 @@ class RawPacket:
                 self.logger.debug(f"pre-processing inner_l4 : {self.inner_l4}")
                 self.inner_l4.swap_ports()
                 self.inner_ipv4.swap_addresses()
+                self.inner_ipv4.ttl -= 1 
                 self.logger.debug(self.raw_data[self.inner_l4.header_end_byte::])
                 if self.raw_data[self.inner_l4.header_end_byte::].decode('utf-8').strip() == "ping":
                     self.raw_data = bytearray(self.raw_data)
