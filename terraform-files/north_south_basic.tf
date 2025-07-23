@@ -100,7 +100,7 @@ resource "aws_subnet" "gwlbe_subnet_1" {
   tags = {
     Name = "gwlbe_subnet_1"
   }
-  map_public_ip_on_launch = false
+  map_public_ip_on_launch = true
 }
 
 resource "aws_subnet" "gwlbe_subnet_2" {
@@ -110,7 +110,7 @@ resource "aws_subnet" "gwlbe_subnet_2" {
   tags = {
     Name = "gwlbe_subnet_2"
   }
-  map_public_ip_on_launch = false
+  map_public_ip_on_launch = true
 }
 
 resource "aws_lb_target_group" "inspection_instances" {
