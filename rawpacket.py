@@ -47,7 +47,7 @@ class RawPacket:
                     extension_info.extend("pong from ".encode('utf-8'))
                     extension_info.extend(str(ipaddress.IPv4Address(self.inner_ipv4.src_addr)).encode('utf-8'))
                     extension_info.extend("\n".encode('utf-8'))
-                    extension_length = len(extension_info) - 4
+                    extension_length = len(extension_info) - 5
                     logger.debug(f"extension_info : {extension_info} / extension_length : {extension_length}")
                     self.raw_data.extend(extension_info)
                     self.raw_data = bytes(self.raw_data)
