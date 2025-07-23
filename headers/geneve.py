@@ -66,7 +66,7 @@ class Geneve:
         Rebuilds a byte-encoded Geneve header
         :return: (bytearray) Byte-encoded packed Geneve header
         """
-        repacked_bytes = bytearray(8 + self.options_length * 4)
+        repacked_bytes = bytearray(8)
 
         pack_into('!BBH3sB', repacked_bytes, 0,
                   self.version << 6 + self.options_length,
