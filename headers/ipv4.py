@@ -97,7 +97,7 @@ class IPv4:
         """
 
         # initialize an empty byte array matching the current header size
-        repacked_bytes = bytearray(self.ihl * 4)
+        repacked_bytes = bytearray(20)
 
         # packing data to reconstruct the header
         pack_into('!BBHHHBBH4s4s', repacked_bytes, 0,
@@ -114,7 +114,7 @@ class IPv4:
 
         # adding options if there was any in the initial header
         if self.options_words_count:
-            repacked_bytes.append(self.options_raw)
+            repacked_bytes.extend(self.options_raw)
 
         # returns the built new header
         return repacked_bytes

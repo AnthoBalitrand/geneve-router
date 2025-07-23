@@ -135,7 +135,7 @@ class GeneveOption:
         Rebuilds a byte-encoded version of the GeneveOption
         :return: (bytearray) Byte-encoded packed GeneveOption
         """
-        repacked_bytes = bytearray(4 + self.option_length * 4)
+        repacked_bytes = bytearray(4)
 
         pack_into('!HBB', repacked_bytes, 0,
                   self.option_class,

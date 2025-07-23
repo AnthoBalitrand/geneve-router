@@ -70,6 +70,7 @@ class TCP:
 
         if self.data_offset > 5:
             self.options_raw = rawpacket[start_padding + 20:start_padding + 20 + (self.data_offset - 5) * 4]
+        else self.options_raw = None
 
         self.payload_length = ip_payload_length - (self.data_offset * 4)
 
@@ -83,6 +84,32 @@ class TCP:
         flags += "U" if self.urg else ""
         flags += "P" if self.psh else ""
         return flags
+
+    def repack(self):
+        """
+        Rebuilds a byte-encoded TCP header 
+        :return: (bytearray) Byte-encoded packed TCP header
+        """
+
+        # initialize an empty byte array matching the current header size 
+        repacked_bytes = bytearray(20)
+
+        # packing data to reconstruct the header 
+        pack_into('!HHIIHHHH', repacked_bytes, 0, 
+            self.src_port, 
+            self.dst_port, 
+            self.seq_num, 
+            self.ack_num, 
+            (self.data_offset << 12) + (self.urg << 5) + (self.ack << 4) + (self.psh << 3) + (self.rst << 2) + (self.syn << 1) + self.fin,
+            self.window, 
+            self.checksum, 
+            self.urg_pointer)
+
+        if self.option_raw:
+            repacked_bytes.extend(self.options_raw)
+
+        return repacked_bytes
+
 
     def __repr__(self):
         return f"[TCP   SRC port:{self.src_port} DST port:{self.dst_port} SEQ/ACK:{self.seq_num}/{self.ack_num} Flags:{self.tcp_flags_str} Window:{self.window}  ]"
