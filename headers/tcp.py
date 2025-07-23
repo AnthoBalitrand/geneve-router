@@ -74,6 +74,9 @@ class TCP:
             self.options_raw = None
 
         self.payload_length = ip_payload_length - (self.data_offset * 4)
+        self.header_end_byte = start_padding + 20
+        if self.options_raw:
+            self.header_end_byte += len(self.options_raw)
 
     @property
     def tcp_flags_str(self):
