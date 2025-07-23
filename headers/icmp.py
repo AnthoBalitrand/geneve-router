@@ -28,6 +28,23 @@ class ICMP:
         self.more = unpacked_struct[3]
 
         self.payload_length = 0
+        self.header_end_byte = start_padding + 8
+
+    def repack(self):
+        """
+        Rebuild a byte-encoded ICMP header
+        :return: (bytearray) Byte-encoded packet ICMP header
+        """
+        repacked_bytes = bytearray(8)
+
+        pack_into('!BBH4s', repacked_bytes, 0, 
+            self.type, 
+            self.code, 
+            self.checksum
+            self.more
+            )
+
+        return repacked_bytes
 
     def __repr__(self):
         return f"[ICMP   Type:{self.type} Code:{self.code}  ]"

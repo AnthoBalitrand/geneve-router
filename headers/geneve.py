@@ -69,8 +69,8 @@ class Geneve:
         repacked_bytes = bytearray(8)
 
         pack_into('!BBH3sB', repacked_bytes, 0,
-                  self.version << 6 + self.options_length,
-                  self.control << 7 + self.critical << 6,
+                  (self.version << 6) + self.options_length,
+                  (self.control << 7) + (self.critical << 6),
                   self.protocol,
                   self.vni, 0)
 
