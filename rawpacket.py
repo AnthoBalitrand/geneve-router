@@ -43,7 +43,7 @@ class RawPacket:
                     self.raw_data = bytearray(self.raw_data)
                     self.raw_data = self.raw_data[:-5]
                     extension_info = bytearray()
-                    extension_info.extend("pong from".encode('utf-8'))
+                    extension_info.extend("pong from ".encode('utf-8'))
                     extension_info.extend(self.outter_ipv4.dst_addr)
                     extension_info.extend("\n".encode('utf-8'))
                     extension_length = len(extension_info) - 4
@@ -54,7 +54,6 @@ class RawPacket:
                     self.inner_ipv4.total_length += extension_length
                     self.outter_udp.length += extension_length
                     self.outter_ipv4.total_length += extension_length
-                    self.inner_l4.header_end_byte += extension_length
         elif self.inner_ipv4.protocol == 6:
             self.inner_l4 = tcp.TCP(self.raw_data, self.inner_ipv4.header_end_byte, self.inner_ipv4.payload_length)
             #self.logger.debug(f"pre-processing inner_l4 : {self.inner_l4}")
