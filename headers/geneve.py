@@ -142,7 +142,7 @@ class GeneveOption:
                   self.option_type,
                   self.option_length)
 
-        repacked_bytes.append(self.option_raw)
+        repacked_bytes.extend(self.option_raw)
 
         return repacked_bytes
 
