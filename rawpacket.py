@@ -93,6 +93,7 @@ class RawPacket:
                 self.inner_l4.repack(),
                 self.raw_data[self.inner_l4.header_end_byte::]
                 ])
+                self.logger.debug(ret)
                 return ret
             return b''.join([
                 self.outter_ipv4.repack(), 
