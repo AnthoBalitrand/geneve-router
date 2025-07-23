@@ -40,7 +40,7 @@ class ICMP:
         pack_into('!BBH4s', repacked_bytes, 0, 
             self.type, 
             self.code, 
-            self.checksum
+            self.checksum,
             self.more
             )
 
