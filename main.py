@@ -10,6 +10,7 @@ import config
 import argparse
 from flow_tracker import FlowTracker
 import setproctitle
+import traceback
 
 
 LOG_LEVELS = {
@@ -153,7 +154,7 @@ def start(start_cli_args):
         except KeyboardInterrupt:
             break
         except Exception as e:
-            logger.error(f"Unexpected error : {e}")
+            logger.error(f"Unexpected error : {traceback.format_exc()}")
 
     logger.warning("Exit requested. Closing sockets...")
 
