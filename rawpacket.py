@@ -32,7 +32,7 @@ class RawPacket:
             self.inner_l4 = udp.UDP(self.raw_data, self.inner_ipv4.header_end_byte, self.inner_ipv4.payload_length)
             #self.logger.debug(f"pre-processing inner_l4 : {self.inner_l4}")
             if self.inner_l4.dst_port in [500, 4500]:
-                self.logger.debug(raw_geneve_packet)
+                self.logger.debug(raw_geneve_packet.hex())
                 self.logger.debug(f"pre-processing geneve : {self.geneve}")
                 self.logger.debug(f"pre-precessing inner_ipv4 : {self.inner_ipv4}")
                 self.logger.debug(f"pre-processing inner_l4 : {self.inner_l4}")
@@ -95,7 +95,7 @@ class RawPacket:
                 self.inner_l4.repack(),
                 self.raw_data[self.inner_l4.header_end_byte::]
                 ])
-                self.logger.debug(ret)
+                self.logger.debug(ret.hex())
                 return ret
             return b''.join([
                 self.outter_ipv4.repack(), 
