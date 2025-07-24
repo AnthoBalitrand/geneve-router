@@ -1,4 +1,4 @@
-from struct import unpack, pack_into
+from struct import pack, unpack, pack_into
 
 
 class IPv4:
@@ -116,7 +116,7 @@ class IPv4:
 
         if compute_checksum:
             self.checksum = self.compute_checksum(
-                pack_into('!BBHHHBBH4s4s', repacked_bytes, 0,
+                pack('!BBHHHBBH4s4s',
                   (self.version << 4) + self.ihl,
                   (self.dscp << 2) + self.ecn,
                   self.total_length,
