@@ -101,9 +101,7 @@ class IPv4:
         s = sum(unpack("!%dH" % (len(header) // 2), header))
         s = (s >> 16) + (s & 0xffff)
         s += s >> 16
-        ret = ~s & 0xffff
-        print(f"Recalculated checksum for header {header.hex()} is {hex(ret)}")
-        return ret
+        return ~s & 0xffff
 
     def repack(self, compute_checksum=False):
         """

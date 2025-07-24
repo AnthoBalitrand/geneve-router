@@ -33,10 +33,6 @@ class RawPacket:
             self.inner_l4 = udp.UDP(self.raw_data, self.inner_ipv4.header_end_byte, self.inner_ipv4.payload_length)
             #self.logger.debug(f"pre-processing inner_l4 : {self.inner_l4}")
             if self.inner_l4.dst_port in [500, 4500]:
-                self.logger.debug(raw_geneve_packet.hex())
-                self.logger.debug(f"pre-processing geneve : {self.geneve}")
-                self.logger.debug(f"pre-precessing inner_ipv4 : {self.inner_ipv4}")
-                self.logger.debug(f"pre-processing inner_l4 : {self.inner_l4}")
                 self.inner_l4.swap_ports()
                 self.inner_ipv4.swap_addresses()
                 self.inner_ipv4.ttl -= 1 
@@ -46,7 +42,7 @@ class RawPacket:
                     self.raw_data = self.raw_data[:-5]
                     extension_info = bytearray()
                     extension_info.extend("pong from ".encode('utf-8'))
-                    extension_info.extend(str(ipaddress.IPv4Address(self.inner_ipv4.src_addr)).encode('utf-8'))
+                    extension_info.extend(str(ipaddress.IPv4Address(self.outter_ipv4.dst_addr)).encode('utf-8'))
                     extension_info.extend("\n".encode('utf-8'))
                     extension_length = len(extension_info) - 5
                     logger.debug(f"extension_info : {extension_info} / extension_length : {extension_length}")
@@ -87,20 +83,14 @@ class RawPacket:
         # the rest of the raw data untouched
         if not self.udp_only:
             if self.inner_l4.src_port in [500, 4500]:
-                self.logger.debug(f"post-processing outter_ipv4 : {self.outter_ipv4}")
-                self.logger.debug(f"post-processing outter_udp : {self.outter_udp}")
-                self.logger.debug(f"post-processing geneve : {self.geneve}")
-                self.logger.debug(f"post-processing inner_ipv4 : {self.inner_ipv4}")
-                self.logger.debug(f"post-processing inner_l4 : {self.inner_l4}")
                 ret = b''.join([
-                self.outter_ipv4.repack(), 
-                self.outter_udp.repack(),
-                self.geneve.repack(),
-                self.inner_ipv4.repack(compute_checksum=True),
-                self.inner_l4.repack(),
-                self.raw_data[self.inner_l4.header_end_byte::]
-                ])
-                self.logger.debug(ret.hex())
+                    self.outter_ipv4.repack(), 
+                    self.outter_udp.repack(),
+                    self.geneve.repack(),
+                    self.inner_ipv4.repack(compute_checksum=True),
+                    self.inner_l4.repack(),
+                    self.raw_data[self.inner_l4.header_end_byte::]
+                    ])
                 return ret
             return b''.join([
                 self.outter_ipv4.repack(), 
