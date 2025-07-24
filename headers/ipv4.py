@@ -115,7 +115,18 @@ class IPv4:
         repacked_bytes = bytearray(20)
 
         if compute_checksum:
-            self.checksum = self.compute_checksum(repacked_bytes)
+            self.checksum = self.compute_checksum(
+                pack_into('!BBHHHBBH4s4s', repacked_bytes, 0,
+                  (self.version << 4) + self.ihl,
+                  (self.dscp << 2) + self.ecn,
+                  self.total_length,
+                  self.identification,
+                  (self.x_flag << 15) + (self.dnf << 14) + (self.more_fragments << 13) + self.fragment_offset,
+                  self.ttl,
+                  self.protocol,
+                  0,
+                  self.src_addr,
+                  self.dst_addr))
 
         # packing data to reconstruct the header
         pack_into('!BBHHHBBH4s4s', repacked_bytes, 0,
