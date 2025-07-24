@@ -112,6 +112,9 @@ class IPv4:
         # initialize an empty byte array matching the current header size
         repacked_bytes = bytearray(20)
 
+        if compute_checksum:
+            self.checksum = self.compute_checksum(repacked_bytes)
+
         # packing data to reconstruct the header
         pack_into('!BBHHHBBH4s4s', repacked_bytes, 0,
                   (self.version << 4) + self.ihl,
@@ -124,21 +127,6 @@ class IPv4:
                   self.checksum,
                   self.src_addr,
                   self.dst_addr)
-
-        if compute_checksum:
-            self.checksum = self.compute_checksum(repacked_bytes)
-            pack_into('!BBHHHBBH4s4s', repacked_bytes, 0,
-                  (self.version << 4) + self.ihl,
-                  (self.dscp << 2) + self.ecn,
-                  self.total_length,
-                  self.identification,
-                  (self.x_flag << 15) + (self.dnf << 14) + (self.more_fragments << 13) + self.fragment_offset,
-                  self.ttl,
-                  self.protocol,
-                  self.checksum,
-                  self.src_addr,
-                  self.dst_addr)
-
 
         # adding options if there was any in the initial header
         if self.options_words_count:
