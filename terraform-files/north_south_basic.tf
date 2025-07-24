@@ -152,6 +152,7 @@ resource "aws_instance" "inspection_instance_1" {
   tags = {
     Name = "Inspection_instance_1"
   }
+  iam_instance_profile = aws_iam_instance_profile.inspection_instance_profile.id
 }
 
 resource "aws_instance" "inspection_instance_2" {
@@ -166,6 +167,7 @@ resource "aws_instance" "inspection_instance_2" {
   tags = {
     Name = "Inspection_instance_2"
   }
+  iam_instance_profile = aws_iam_instance_profile.inspection_instance_profile.id
 }
 
 resource "aws_instance" "public_instance_1" {
@@ -461,6 +463,59 @@ resource "aws_lb_listener" "gwlb-listener" {
     target_group_arn = aws_lb_target_group.inspection_instances.arn
     type = "forward"
   }
+}
+
+resource "aws_iam_role" "inspection_s3_access_role" {
+  name = "inspection_s3_access_role"
+  assume_role_policy = jsonencode({
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Action": "sts:AssumeRole",
+        "Principal": {
+          "Service": "ec2.amazonaws.com"
+        },
+        "Effect": "Allow",
+        "Sid": ""
+      }
+    ]
+  })
+}
+
+resource "aws_iam_instance_profile" "inspection_instance_profile" {
+  name = "inspection_instance_profile"
+  role = aws_iam_role.inspection_s3_access_role.name
+}
+
+resource "aws_iam_role_policy" "inspection_instance_role_policy" {
+  name = "inspection_instance_role_policy"
+  role = aws_iam_role.inspection_s3_access_role.id
+  policy = jsonencode({
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Effect": "Allow",
+        "Action": ["s3:ListBucket"],
+        "Resource": ["arn:aws:s3:::inspection-instances-bucket"]
+      },
+      {
+        "Effect": "Allow",
+        "Action": [
+          "s3:PutObject",
+          "s3:GetObject",
+          "s3:DeleteObject"
+        ],
+        "Resource": ["arn:aws:s3:::inspection-instances-bucket/*"]
+      }
+    ]
+  })
+}
+
+resource "aws_s3_bucket" "inspection-bucket" {
+    bucket = "inspection-instances-bucket"
+    tags = {
+        Name = "inspection-instances-bucket"
+    }
 }
 
 output "public_instance_1" {

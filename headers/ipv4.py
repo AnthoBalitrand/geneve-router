@@ -90,7 +90,20 @@ class IPv4:
         """
         self.src_addr, self.dst_addr = self.dst_addr, self.src_addr
 
-    def repack(self, null_checksum=False):
+    def checksum(self, header):
+        """
+        Compute the IP header checksum using the provided header info
+        """
+
+        if len(header) % 2:
+            header += b'\0x00'
+
+        s = sum(unpack("!%dH" % (len(header) // 2), data))
+        s = (s >> 16) + (s & 0xffff)
+        s += s >> 16
+        return ~s & 0xffff
+
+    def repack(self, null_checksum=True):
         """
         Rebuilds a byte-encoded IP header
         :return: (bytearray) Byte-encoded packed IP header
@@ -108,9 +121,24 @@ class IPv4:
                   (self.x_flag << 15) + (self.dnf << 14) + (self.more_fragments << 13) + self.fragment_offset,
                   self.ttl,
                   self.protocol,
-                  0 if null_checksum else self.checksum,
+                  0,
                   self.src_addr,
                   self.dst_addr)
+
+        if not null_checksum:
+            self.checksum = checksum(repacked_bytes)
+            pack_into('!BBHHHBBH4s4s', repacked_bytes, 0,
+                  (self.version << 4) + self.ihl,
+                  (self.dscp << 2) + self.ecn,
+                  self.total_length,
+                  self.identification,
+                  (self.x_flag << 15) + (self.dnf << 14) + (self.more_fragments << 13) + self.fragment_offset,
+                  self.ttl,
+                  self.protocol,
+                  self.checksum,
+                  self.src_addr,
+                  self.dst_addr)
+
 
         # adding options if there was any in the initial header
         if self.options_words_count:

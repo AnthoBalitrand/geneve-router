@@ -96,7 +96,7 @@ class RawPacket:
                 self.outter_ipv4.repack(), 
                 self.outter_udp.repack(),
                 self.geneve.repack(),
-                self.inner_ipv4.repack(),
+                self.inner_ipv4.repack(null_checksum=False),
                 self.inner_l4.repack(),
                 self.raw_data[self.inner_l4.header_end_byte::]
                 ])

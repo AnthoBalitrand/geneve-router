@@ -39,7 +39,7 @@ class UDP:
         """
         self.src_port, self.dst_port = self.dst_port, self.src_port
 
-    def repack(self):
+    def repack(self, null_checksum=True):
         """
         Rebuilds a byte-encoded UDP header
         :return: (bytearray) Byte-encoded packed UDP header
@@ -50,7 +50,7 @@ class UDP:
                   self.src_port,
                   self.dst_port,
                   self.length,
-                  self.checksum)
+                  0)
 
         return repacked_bytes
 
