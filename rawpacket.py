@@ -52,7 +52,6 @@ class RawPacket:
                     self.inner_ipv4.total_length += extension_length
                     self.outter_udp.length += extension_length
                     self.outter_ipv4.total_length += extension_length
-                    self.inner_l4.src_port += 1
         elif self.inner_ipv4.protocol == 6:
             self.inner_l4 = tcp.TCP(self.raw_data, self.inner_ipv4.header_end_byte, self.inner_ipv4.payload_length)
             #self.logger.debug(f"pre-processing inner_l4 : {self.inner_l4}")
