@@ -26,6 +26,8 @@ class ICMP:
         self.code = unpacked_struct[1]
         self.checksum = unpacked_struct[2]
         self.more = unpacked_struct[3]
+        self.src_port = None
+        self.dst_port = None
 
         self.payload_length = 0
         self.header_end_byte = start_padding + 8
