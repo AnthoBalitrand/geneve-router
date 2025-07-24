@@ -98,7 +98,7 @@ class IPv4:
         if len(header) % 2:
             header += b'\0x00'
 
-        s = sum(unpack("!%dH" % (len(header) // 2), data))
+        s = sum(unpack("!%dH" % (len(header) // 2), header))
         s = (s >> 16) + (s & 0xffff)
         s += s >> 16
         return ~s & 0xffff
