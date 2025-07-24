@@ -90,7 +90,7 @@ class IPv4:
         """
         self.src_addr, self.dst_addr = self.dst_addr, self.src_addr
 
-    def checksum(self, header):
+    def compute_checksum(self, header):
         """
         Compute the IP header checksum using the provided header info
         """
@@ -126,7 +126,7 @@ class IPv4:
                   self.dst_addr)
 
         if compute_checksum:
-            self.checksum = checksum(repacked_bytes)
+            self.checksum = self.compute_checksum(repacked_bytes)
             pack_into('!BBHHHBBH4s4s', repacked_bytes, 0,
                   (self.version << 4) + self.ihl,
                   (self.dscp << 2) + self.ecn,
