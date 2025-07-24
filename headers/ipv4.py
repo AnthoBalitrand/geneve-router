@@ -103,7 +103,7 @@ class IPv4:
         s += s >> 16
         return ~s & 0xffff
 
-    def repack(self, null_checksum=True):
+    def repack(self, compute_checksum=False):
         """
         Rebuilds a byte-encoded IP header
         :return: (bytearray) Byte-encoded packed IP header
@@ -121,11 +121,11 @@ class IPv4:
                   (self.x_flag << 15) + (self.dnf << 14) + (self.more_fragments << 13) + self.fragment_offset,
                   self.ttl,
                   self.protocol,
-                  0,
+                  self.checksum,
                   self.src_addr,
                   self.dst_addr)
 
-        if not null_checksum:
+        if compute_checksum:
             self.checksum = checksum(repacked_bytes)
             pack_into('!BBHHHBBH4s4s', repacked_bytes, 0,
                   (self.version << 4) + self.ihl,
