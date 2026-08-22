@@ -22,12 +22,11 @@ resource "aws_key_pair" "inspection_instances_kp" {
   public_key = tls_private_key.inspection_instances_pk.public_key_openssh
 }
 
-data "aws_ami" "amzn2-kernel" {
+data "aws_ami" "al2-2023" {
   most_recent = true
-
   filter {
     name = "name"
-    values = ["amzn2-ami-kernel-5.10-hvm*"]
+    values = ["al2023-ami-2023*"]
   }
 
   filter {
@@ -35,6 +34,10 @@ data "aws_ami" "amzn2-kernel" {
     values = ["hvm"]
   }
   owners = ["137112412989"]
+}
+
+data "aws_availability_zones" "available" {
+  state = "available"
 }
 
 resource "aws_vpc" "inspection_vpc" {
@@ -54,7 +57,7 @@ resource "aws_vpc" "public_vpc" {
 }
 
 resource "aws_subnet" "inspection_subnet_1" {
-  availability_zone = "eu-west-3a"
+  availability_zone = data.aws_availability_zones.available.names[0]
   cidr_block = "192.168.10.0/26"
   vpc_id = aws_vpc.inspection_vpc.id
   tags = {
@@ -64,7 +67,7 @@ resource "aws_subnet" "inspection_subnet_1" {
 }
 
 resource "aws_subnet" "inspection_subnet_2" {
-  availability_zone = "eu-west-3b"
+  availability_zone = data.aws_availability_zones.available.names[1]
   cidr_block = "192.168.10.64/26"
   vpc_id = aws_vpc.inspection_vpc.id
   tags = {
@@ -74,7 +77,7 @@ resource "aws_subnet" "inspection_subnet_2" {
 }
 
 resource "aws_subnet" "public_subnet_1" {
-  availability_zone = "eu-west-3a"
+  availability_zone = data.aws_availability_zones.available.names[0]
   cidr_block = "10.0.10.0/26"
   vpc_id = aws_vpc.public_vpc.id
   tags = {
@@ -84,7 +87,7 @@ resource "aws_subnet" "public_subnet_1" {
 }
 
 resource "aws_subnet" "public_subnet_2" {
-  availability_zone = "eu-west-3b"
+  availability_zone = data.aws_availability_zones.available.names[1]
   cidr_block = "10.0.10.64/26"
   vpc_id = aws_vpc.public_vpc.id
   tags = {
@@ -94,7 +97,7 @@ resource "aws_subnet" "public_subnet_2" {
 }
 
 resource "aws_subnet" "gwlbe_subnet_1" {
-  availability_zone = "eu-west-3a"
+  availability_zone = data.aws_availability_zones.available.names[0]
   cidr_block = "10.0.10.128/26"
   vpc_id = aws_vpc.public_vpc.id
   tags = {
@@ -104,7 +107,7 @@ resource "aws_subnet" "gwlbe_subnet_1" {
 }
 
 resource "aws_subnet" "gwlbe_subnet_2" {
-  availability_zone = "eu-west-3b"
+  availability_zone = data.aws_availability_zones.available.names[1]
   cidr_block = "10.0.10.192/26"
   vpc_id = aws_vpc.public_vpc.id
   tags = {
@@ -141,7 +144,7 @@ resource "aws_lb_target_group_attachment" "inspection_gwlb_tg_attach_2" {
 }
 
 resource "aws_instance" "inspection_instance_1" {
-  ami = data.aws_ami.amzn2-kernel.id
+  ami = data.aws_ami.al2-2023.id
   instance_type = "t2.micro"
   key_name = aws_key_pair.inspection_instances_kp.key_name
   network_interface {
@@ -155,7 +158,7 @@ resource "aws_instance" "inspection_instance_1" {
 }
 
 resource "aws_instance" "inspection_instance_2" {
-  ami = data.aws_ami.amzn2-kernel.id
+  ami = data.aws_ami.al2-2023.id
   instance_type = "t2.micro"
   key_name = aws_key_pair.inspection_instances_kp.key_name
   network_interface {
@@ -169,7 +172,7 @@ resource "aws_instance" "inspection_instance_2" {
 }
 
 resource "aws_instance" "public_instance_1" {
-  ami = data.aws_ami.amzn2-kernel.id
+  ami = data.aws_ami.al2-2023.id
   instance_type = "t2.micro"
   key_name = aws_key_pair.inspection_instances_kp.key_name
   network_interface {
@@ -184,7 +187,7 @@ resource "aws_instance" "public_instance_1" {
 }
 
 resource "aws_instance" "public_instance_2" {
-  ami = data.aws_ami.amzn2-kernel.id
+  ami = data.aws_ami.al2-2023.id
   instance_type = "t2.micro"
   key_name = aws_key_pair.inspection_instances_kp.key_name
   network_interface {
